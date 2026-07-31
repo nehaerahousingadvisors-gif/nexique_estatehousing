@@ -63,7 +63,7 @@ export default function ContactPage() {
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900 mb-1">ADDRESS</h3>
                     <p className="text-slate-600 text-sm">
-                      Anthurium building name, Tower A, 315 office no. 3rd Floor, Sector-73
+                      315, Anthurium Office Spaces, Tower A, Sector-73, Uttar pradesh, 201301
                     </p>
                   </div>
                 </div>
@@ -90,7 +90,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900 mb-1">EMAIL US</h3>
-                    <p className="text-slate-600 text-sm">info@newerahousingadvisors.com</p>
+                    <p className="text-slate-600 text-sm">info@nexiqueestate.com</p>
                   </div>
                 </div>
               </div>

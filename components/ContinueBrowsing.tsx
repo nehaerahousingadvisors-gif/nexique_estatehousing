@@ -26,7 +26,7 @@ export default function ContinueBrowsing() {
       <div className="max-w-7xl mx-auto">
         <p className="text-xs font-semibold text-gray-400 mb-3 tracking-wide">Continue browsing...</p>
 
-        <div className="flex items-center justify-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {tabs.map((tab) => {
             const isActive = active === tab.query;
             return (

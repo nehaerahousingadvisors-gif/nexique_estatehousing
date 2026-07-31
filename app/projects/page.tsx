@@ -64,10 +64,10 @@ const projects: Project[] = [
     ],
     mediaGallery: [
       { id: 1, type: 'image', url: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2000&auto=format&fit=crop', caption: 'Vaastu Homes Exterior' },
-      { id: 2, type: 'image', url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1600&auto=format&fit=crop', caption: 'Swimming Pool' },
+      { id: 2, type: 'image', url: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?q=80&w=1600&auto=format&fit=crop', caption: 'Swimming Pool' },
       { id: 3, type: 'video', url: 'https://www.w3schools.com/html/mov_bbb.mp4', caption: 'Project Tour' },
     ],
-    amenitiesImage: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1600&auto=format&fit=crop',
+    amenitiesImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?q=80&w=1600&auto=format&fit=crop',
     amenitiesCaption: 'Swimming Pool at Vaastu Homes',
     locationHighlights: [
       'Vaishali Metro Station - 2 KM',
@@ -105,10 +105,10 @@ const projects: Project[] = [
     ],
     mediaGallery: [
       { id: 1, type: 'image', url: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2000&auto=format&fit=crop', caption: 'Godrej Nest Exterior' },
-      { id: 2, type: 'image', url: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1600&auto=format&fit=crop', caption: 'Clubhouse' },
+      { id: 2, type: 'image', url: 'https://images.unsplash.com/photo-1560184897-ae75f418493e?q=80&w=1600&auto=format&fit=crop', caption: 'Clubhouse' },
       { id: 3, type: 'image', url: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=1600&auto=format&fit=crop', caption: 'Garden Area' },
     ],
-    amenitiesImage: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1600&auto=format&fit=crop',
+    amenitiesImage: 'https://images.unsplash.com/photo-1560184897-ae75f418493e?q=80&w=1600&auto=format&fit=crop',
     amenitiesCaption: 'Clubhouse at Godrej Nest',
     locationHighlights: [
       'Noida Sector 148 Metro Station - 2.5 KM',
@@ -273,9 +273,9 @@ const projects: Project[] = [
     ],
     mediaGallery: [
       { id: 1, type: 'image', url: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2000&auto=format&fit=crop', caption: 'M3M The Line Exterior' },
-      { id: 2, type: 'image', url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1600&auto=format&fit=crop', caption: 'Fitness Center' },
+      { id: 2, type: 'image', url: 'https://images.unsplash.com/photo-1559494007-9f5847c49d94?q=80&w=1600&auto=format&fit=crop', caption: 'Fitness Center' },
     ],
-    amenitiesImage: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1600&auto=format&fit=crop',
+    amenitiesImage: 'https://images.unsplash.com/photo-1559494007-9f5847c49d94?q=80&w=1600&auto=format&fit=crop',
     amenitiesCaption: 'Fitness Center at M3M The Line',
     locationHighlights: [
       'Sohna Road - 2 KM',
@@ -313,9 +313,9 @@ const projects: Project[] = [
     ],
     mediaGallery: [
       { id: 1, type: 'image', url: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2000&auto=format&fit=crop', caption: 'Grandthum Exterior' },
-      { id: 2, type: 'image', url: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1600&auto=format&fit=crop', caption: 'Children Play Area' },
+      { id: 2, type: 'image', url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1600&auto=format&fit=crop', caption: 'Children Play Area' },
     ],
-    amenitiesImage: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1600&auto=format&fit=crop',
+    amenitiesImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1600&auto=format&fit=crop',
     amenitiesCaption: 'Children Play Area at Grandthum',
     locationHighlights: [
       'Noida Extension Metro - 3 KM',
