@@ -24,10 +24,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${lexendDeca.variable} h-full antialiased`}
+      className={`${lexendDeca.variable} h-full antialiased overflow-x-hidden`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+      <body className="min-h-full flex flex-col overflow-x-hidden" suppressHydrationWarning>
         <Header />
         <PremiumBanner />
         <ScrollingBanner />

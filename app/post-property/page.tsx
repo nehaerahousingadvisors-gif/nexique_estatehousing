@@ -919,8 +919,8 @@ export default function PostPropertyPage() {
             <p className="text-sm font-semibold text-gray-700 mb-0.5">Need help?</p>
             <p className="text-xs text-gray-500">
               You can email us at{' '}
-              <a href="mailto:info@neha.com" className="hover:underline" style={{ color: PRIMARY }}>info@neha.com</a>
-              {' '}or call us at <span className="font-semibold text-gray-700">1800 41 99099</span> (IND Toll-Free)
+              <a href="mailto:info@nexiqueestate.com" className="hover:underline" style={{ color: PRIMARY }}>info@nexiqueestate.com</a>
+              {' '}or call us at <a href="tel:+919667394175" className="font-semibold text-gray-700 hover:underline">+91 96673 94175</a>
             </p>
           </div>
         </div>

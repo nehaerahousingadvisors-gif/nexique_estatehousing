@@ -127,7 +127,9 @@ export default function Footer() {
       {/* WhatsApp FAB */}
       <div className="fixed bottom-4 md:bottom-6 right-4 md:right-6">
         <a
-          href="https://wa.me/919711444460"
+          href="https://wa.me/919667394175?text=Hello%2C%20I%20am%20interested%20in%20your%20properties.%20Please%20share%20more%20details."
+          target="_blank"
+          rel="noopener noreferrer"
           className="w-12 h-12 md:w-14 md:h-14 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center shadow-lg transition-colors"
         >
           <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
