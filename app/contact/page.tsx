@@ -36,7 +36,7 @@ export default function ContactPage() {
           <p className="text-[#C4A35A] text-xs uppercase tracking-widest mb-2">GET IN TOUCH</p>
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">Let's Discuss Your Spaces</h1>
           <p className="text-slate-300 max-w-2xl">
-            New Era Housing Advisors helps you buy, sell, and invest in premium properties with expert advice and trusted service across India.
+            Nexique Estate Housing Advisors helps you buy, sell, and invest in premium properties with expert advice and trusted service across India.
           </p>
         </div>
       </section>

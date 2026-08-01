@@ -130,12 +130,18 @@ export default function AboutPage() {
                   </svg>
                 </a>
                 <a 
-                  href="tel:+919711444460"
-                  className="ml-4 px-6 py-3 text-white font-semibold rounded-full transition-colors"
+                  href="https://wa.me/919667394175?text=Hello%2C%20I%20am%20interested%20in%20your%20properties.%20Please%20share%20more%20details."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-4 px-6 py-3 text-white font-semibold rounded-full transition-colors flex items-center gap-2"
                   style={{ backgroundColor: '#1a2744' }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#131e36')}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#1a2744')}
                 >
+                  {/* WhatsApp icon */}
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.476-.884-.785-1.48-1.75-1.653-2.047-.173-.298-.018-.46.13-.608.135-.135.298-.347.446-.52.149-.173.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.488-.5-.67-.51-.172-.01-.371-.015-.57-.015-.198 0-.52.074-.792.371-.27.296-1.029 1.008-1.029 2.455 0 1.447 1.054 2.848 1.2 3.045.149.198 2.096 3.2 5.077 4.487.712.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.041-1.37l-.36-.213-3.641.96 1.01-3.549-.235-.374a9.86 9.86 0 01-1.54-5.215c-.024-5.45 4.44-9.885 9.901-9.885 2.64 0 5.122 1.03 6.982 2.892a9.825 9.825 0 012.88 6.978c0 5.459-4.44 9.89-9.883 9.89z"/>
+                  </svg>
                   Get in Touch
                 </a>
               </div>
