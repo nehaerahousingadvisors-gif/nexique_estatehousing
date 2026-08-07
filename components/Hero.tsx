@@ -240,7 +240,17 @@ export default function Hero() {
                     {locations.map((loc) => (
                       <button
                         key={loc}
-                        onClick={() => setSelectedLocation(loc)}
+                        onClick={() => {
+                          setSelectedLocation(loc);
+                          // Navigate immediately to projects filtered by location
+                          const params = new URLSearchParams();
+                          if (searchQuery) params.set('q', searchQuery);
+                          if (activeTab) params.set('tab', activeTab);
+                          if (propertyType) params.set('type', propertyType);
+                          params.set('location', loc);
+                          setShowPopup(false);
+                          router.push(`/projects?${params.toString()}`);
+                        }}
                         className="flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-medium transition-all text-left"
                         style={{
                           borderColor: selectedLocation === loc ? NAVY : '#e5e7eb',
@@ -267,7 +277,18 @@ export default function Hero() {
                 )}
                 <div className="ml-auto">
                   <button
-                    onClick={() => { setShowPopup(false); setPopupStep('type'); }}
+                    onClick={() => {
+                      setShowPopup(false);
+                      setPopupStep('type');
+                      if (selectedLocation) {
+                        const params = new URLSearchParams();
+                        if (searchQuery) params.set('q', searchQuery);
+                        if (activeTab) params.set('tab', activeTab);
+                        if (propertyType) params.set('type', propertyType);
+                        params.set('location', selectedLocation);
+                        router.push(`/projects?${params.toString()}`);
+                      }
+                    }}
                     className="px-5 py-2 text-sm font-semibold text-white rounded-xl transition-colors"
                     style={{ backgroundColor: NAVY }}
                     onMouseEnter={e => (e.currentTarget.style.backgroundColor = NAVY_DARK)}

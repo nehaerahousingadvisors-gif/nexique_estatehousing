@@ -143,7 +143,7 @@ export default function Header() {
               Post Property
             </Link>
             <Link
-              href="/consultation"
+              href="/contact"
               className="flex items-center text-white px-5 py-2.5 rounded-full font-medium transition-colors"
               style={{ backgroundColor: NAVY }}
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = NAVY_DARK)}
@@ -290,7 +290,7 @@ export default function Header() {
               Post Property
             </Link>
             <Link
-              href="/consultation"
+              href="/contact"
               className="flex items-center justify-center text-white px-5 py-3 rounded-full font-medium mt-2"
               style={{ backgroundColor: NAVY }}
               onClick={() => setIsMobileMenuOpen(false)}
