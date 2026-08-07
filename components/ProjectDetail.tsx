@@ -138,6 +138,7 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
                 src={mediaGallery[selectedMediaIndex]?.url} 
                 alt={mediaGallery[selectedMediaIndex]?.caption || project.name}
                 fill
+                sizes="100vw"
                 className="object-contain"
                 priority
               />
@@ -187,6 +188,7 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
                   src={mediaGallery[selectedMediaIndex]?.url} 
                   alt={mediaGallery[selectedMediaIndex]?.caption || project.name}
                   fill
+                  sizes="100vw"
                   className="object-cover"
                   priority
                 />
@@ -251,6 +253,7 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
                             src={media.thumbnail || media.url}
                             alt={media.caption || 'Media'}
                             fill
+                            sizes="112px"
                             className="object-cover"
                           />
                         ) : (
@@ -411,6 +414,7 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
                   src={project.amenitiesImage} 
                   alt={project.amenitiesCaption}
                   fill
+                  sizes="100vw"
                   className="object-cover"
                 />
               </div>
@@ -439,6 +443,7 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
                         src={media.url}
                         alt={media.caption || 'Project Photo'}
                         fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
                         className="object-cover group-hover:scale-110 transition-transform duration-700"
                       />
                     </div>

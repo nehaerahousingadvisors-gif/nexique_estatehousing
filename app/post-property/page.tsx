@@ -1,7 +1,12 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { addDoc, collection, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, db, storage } from '@/lib/firebase';
 
 type LookingTo = 'Sell' | 'Rent / Lease';
 type PropertyCategory = 'Residential' | 'Commercial';
@@ -34,14 +39,21 @@ const commercialTypes = [
 ];
 
 // ─── Step 4: Photos, Videos & Voice-over ──────────────────────────────────────
-function Step4MediaUpload({ onBack, onContinue }: { onBack: () => void; onContinue: () => void }) {
-  const [photos, setPhotos] = useState<File[]>([]);
-  const [videos, setVideos] = useState<File[]>([]);
-  const [voiceOver, setVoiceOver] = useState<File | null>(null);
+interface Step4MediaUploadProps {
+  onBack: () => void;
+  onContinue: () => void;
+  photos: File[];
+  setPhotos: React.Dispatch<React.SetStateAction<File[]>>;
+  videos: File[];
+  setVideos: React.Dispatch<React.SetStateAction<File[]>>;
+  voiceOver: File | null;
+  setVoiceOver: React.Dispatch<React.SetStateAction<File | null>>;
+}
+function Step4MediaUpload({ onBack, onContinue, photos, setPhotos, videos, setVideos, voiceOver, setVoiceOver }: Step4MediaUploadProps) {
   const [recording, setRecording] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
 
-  const canContinue = photos.length > 0 && videos.length > 0;
+  const canContinue = photos.length > 0;
 
   const handleContinue = () => {
     if (!canContinue) { setShowErrors(true); return; }
@@ -127,13 +139,9 @@ function Step4MediaUpload({ onBack, onContinue }: { onBack: () => void; onContin
         <div className="flex items-center gap-2 mb-1">
           <h3 className="text-lg font-bold text-slate-800">Videos</h3>
           <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Max 3 videos</span>
-          <span className="text-red-500 text-sm font-bold">*</span>
+          <span className="text-xs text-gray-400 italic">(Optional)</span>
         </div>
-        <p className="text-xs text-gray-400 mb-1">MP4, MOV up to 50MB each. Videos boost engagement by 3x.</p>
-        {showErrors && videos.length === 0 && (
-          <p className="text-xs text-red-500 mb-3">At least 1 video is required</p>
-        )}
-        {!(showErrors && videos.length === 0) && <div className="mb-3" />}
+        <p className="text-xs text-gray-400 mb-3">MP4, MOV up to 50MB each. Videos boost engagement by 3x.</p>
 
         <div className="flex flex-wrap gap-3 mb-3">
           {videos.map((f, i) => (
@@ -343,6 +351,252 @@ function formatIndianPrice(amount: number): string {
 }
 
 export default function PostPropertyPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitProgress, setSubmitProgress] = useState('');
+  const [submitError, setSubmitError] = useState('');
+
+  // Auth check
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setAuthLoading(false);
+      if (!u) {
+        router.push('/login');
+      }
+    });
+    return () => unsub();
+  }, [router]);
+
+  // Helper: Upload a file to Firebase Storage with 30s timeout
+  const uploadFile = async (file: File, folder: string, namePrefix: string): Promise<string> => {
+    const timestamp = Date.now();
+    const safeName = file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '');
+    const fileName = `${namePrefix}-${timestamp}-${safeName}`;
+    const storageRef = ref(storage, `${folder}/${fileName}`);
+
+    // Promise with timeout to prevent infinite hangs
+    const timeoutMs = file.size > 5 * 1024 * 1024 ? 120000 : 45000; // Larger files get more time
+    const timeoutPromise = new Promise<string>((_, reject) =>
+      setTimeout(() => reject(new Error(`Upload timed out after ${timeoutMs / 1000}s for "${file.name}"`)), timeoutMs)
+    );
+
+    const uploadPromise = (async () => {
+      const snapshot = await uploadBytes(storageRef, file);
+      return getDownloadURL(snapshot.ref);
+    })();
+
+    return Promise.race([uploadPromise, timeoutPromise]);
+  };
+
+  // Submit handler - save to Firebase
+  const handleSubmitProperty = async () => {
+    if (!expectedPrice) { setShowStep5Errors(true); return; }
+    if (!user) {
+      setSubmitError('You must be logged in to submit a property. Please login and try again.');
+      alert('❌ Please login first!');
+      router.push('/login');
+      return;
+    }
+
+    if (photos.length === 0) {
+      setSubmitError('At least 1 photo is required to submit the property.');
+      alert('❌ Please upload at least 1 photo of the property.');
+      return;
+    }
+
+    setSubmitting(true);
+    setSubmitError('');
+    setSubmitProgress('Starting submission...');
+
+    // For browser console debugging
+    console.log('🔵 Starting property submission...');
+    console.log('   User:', user.uid, user.email);
+    console.log('   Photos:', photos.length, '| Videos:', videos.length, '| Voiceover:', !!voiceOver);
+
+    try {
+      // ─── Phase 1: Upload Photos ───────────────────────────────────────────
+      console.log('📸 Uploading photos...');
+      setSubmitProgress(`Uploading photos... (0/${photos.length})`);
+      const photoUrls: string[] = [];
+      for (let i = 0; i < photos.length; i++) {
+        try {
+          console.log(`   Photo ${i + 1}/${photos.length}: ${photos[i].name} (${(photos[i].size / 1024).toFixed(0)} KB)`);
+          setSubmitProgress(`Uploading photo ${i + 1} of ${photos.length}...`);
+          const url = await uploadFile(photos[i], `properties/${user.uid}/photos`, `photo-${i}`);
+          photoUrls.push(url);
+          console.log(`   ✔ Photo ${i + 1} uploaded`);
+        } catch (uploadErr: any) {
+          console.error(`   ✗ Failed to upload photo ${i + 1}:`, uploadErr?.message || uploadErr);
+          if (uploadErr?.message?.toLowerCase().includes('permission') || uploadErr?.code === 'storage/unauthorized') {
+            throw new Error(
+              '🔒 Firebase Storage permission denied! Please go to Firebase Console → Storage → Rules, and enable write access for authenticated users.'
+            );
+          }
+        }
+      }
+      if (photoUrls.length === 0) {
+        throw new Error('None of the photos could be uploaded. Please check your Firebase Storage setup.');
+      }
+      console.log(`✅ Photos done: ${photoUrls.length}/${photos.length} uploaded`);
+
+      // ─── Phase 2: Upload Videos (Optional) ────────────────────────────────
+      const videoUrls: string[] = [];
+      if (videos.length > 0) {
+        console.log('🎥 Uploading videos (optional)...');
+        for (let i = 0; i < videos.length; i++) {
+          try {
+            console.log(`   Video ${i + 1}/${videos.length}: ${videos[i].name} (${(videos[i].size / (1024 * 1024)).toFixed(1)} MB)`);
+            setSubmitProgress(`Uploading video ${i + 1} of ${videos.length}...`);
+            const url = await uploadFile(videos[i], `properties/${user.uid}/videos`, `video-${i}`);
+            videoUrls.push(url);
+            console.log(`   ✔ Video ${i + 1} uploaded`);
+          } catch (uploadErr: any) {
+            console.warn(`   ⚠ Skipping video ${i + 1}:`, uploadErr?.message || uploadErr);
+          }
+        }
+        console.log(`✅ Videos done: ${videoUrls.length}/${videos.length} uploaded`);
+      }
+
+      // ─── Phase 3: Upload Voice Over (Optional) ────────────────────────────
+      let voiceOverUrl = '';
+      if (voiceOver) {
+        console.log('🎤 Uploading voice over...');
+        setSubmitProgress('Uploading voice over...');
+        try {
+          voiceOverUrl = await uploadFile(voiceOver, `properties/${user.uid}/audio`, 'voiceover');
+          console.log('✅ Voice over uploaded');
+        } catch (uploadErr: any) {
+          console.warn('   ⚠ Skipping voice over:', uploadErr?.message || uploadErr);
+        }
+      }
+
+      // ─── Phase 4: Build Property Document ─────────────────────────────────
+      console.log('📄 Preparing Firestore document...');
+      setSubmitProgress('Preparing property data...');
+      const propertyData = {
+        // Step 1
+        lookingTo,
+        propertyCategory,
+        propertyType: selectedType,
+        // Step 2
+        city,
+        locality,
+        houseNo,
+        address: `${houseNo ? houseNo + ', ' : ''}${locality}, ${city}`.replace(/^, |, $/g, ''),
+        // Step 3
+        bedrooms,
+        bathrooms,
+        balconies,
+        plotArea,
+        plotUnit,
+        carpetArea,
+        builtUpArea,
+        furnishing,
+        coveredParking,
+        openParking,
+        totalFloors,
+        availability,
+        // Project Profile
+        inventoryType,
+        projectName: projectName || `${selectedType || 'Property'} in ${locality || city}`,
+        projectLocation,
+        landArea,
+        totalTowers,
+        totalResidences,
+        reraNumber,
+        locationOverview,
+        connectivityHighlights: connectivityHighlights.filter(h => h.trim() !== ''),
+        // Media
+        photos: photoUrls,
+        videos: videoUrls,
+        voiceOver: voiceOverUrl,
+        image: photoUrls[0] || '',
+        imageUrl: photoUrls[0] || '',
+        heroImage: photoUrls[0] || '',
+        mediaGallery: [
+          ...photoUrls.map((url, i) => ({ id: i + 1, type: 'image' as const, url, caption: `Photo ${i + 1}` })),
+          ...videoUrls.map((url, i) => ({ id: photoUrls.length + i + 1, type: 'video' as const, url, caption: `Video ${i + 1}` })),
+        ],
+        // Step 5
+        expectedPrice,
+        priceUnit,
+        priceNegotiable,
+        allInclusive,
+        taxExcluded,
+        maintenanceCharge,
+        maintenanceUnit,
+        bookingAmount,
+        bookingUnit,
+        price: expectedPrice ? `₹${Number(expectedPrice).toLocaleString('en-IN')}` : '',
+        // Meta
+        name: projectName || `${selectedType || 'Property'} in ${locality || city}`,
+        location: projectLocation || `${locality || 'Location'}, ${city || 'City'}`,
+        status: availability || 'Ready to move',
+        developer: developerName || '',
+        launchYear: new Date().getFullYear().toString(),
+        overview: `A ${selectedType || 'property'} in ${locality || city} for ${lookingTo || 'Sale'}`,
+        area: plotArea ? `${plotArea} ${plotUnit}` : '',
+        configurations: configurations.length > 0 ? configurations : (bedrooms ? [`${bedrooms} BHK`] : []),
+        amenities: selectedAmenities,
+        locationHighlights: connectivityHighlights.filter(h => h.trim() !== ''),
+        amenitiesImage: photoUrls[photoUrls.length - 1] || photoUrls[0] || '',
+        amenitiesCaption: 'Property Amenities',
+        details: [
+          { label: 'Inventory Type', value: inventoryType },
+          { label: 'Project', value: projectName },
+          { label: 'Developer', value: developerName },
+          { label: 'Location', value: projectLocation || `${locality}, ${city}` },
+          { label: 'Project Land Area', value: landArea },
+          { label: 'Total Towers', value: totalTowers },
+          { label: 'Total Residences', value: totalResidences },
+          { label: 'RERA Number', value: reraNumber },
+          { label: 'Status', value: availability },
+        ].filter(d => d.value),
+        // Admin
+        userId: user.uid,
+        userEmail: user.email,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+
+      // ─── Phase 5: Save to Firestore ───────────────────────────────────────
+      console.log('💾 Saving to Firestore...');
+      setSubmitProgress('Saving property to database...');
+      const docRef = await addDoc(collection(db, 'properties'), propertyData);
+      console.log('🎉 Property saved successfully! Firestore ID:', docRef.id);
+      setSubmitProgress('Done! Redirecting...');
+
+      // Show success & redirect
+      alert('✅ Property submitted successfully! Your property is now live.');
+      // Try to redirect, but do NOT block in case redirect fails
+      try { router.push('/my-properties'); } catch (e) { console.warn('Redirect failed', e); }
+    } catch (err: any) {
+      console.error('❌ CRITICAL ERROR DURING SUBMISSION:', err);
+      let msg = err?.message || 'Something went wrong. Please try again.';
+      let helpfulMsg = '';
+
+      if (err?.code === 'storage/unauthorized' || msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('unauthorized')) {
+        helpfulMsg = '\n\n👉 FIX: Go to Firebase Console → Storage → Rules, and set:\nallow read, write: if request.auth != null;';
+      } else if (err?.code === 'permission-denied' || err?.code === 7) {
+        helpfulMsg = '\n\n👉 FIX: Go to Firebase Console → Firestore Database → Rules, and set:\nallow read, write: if request.auth != null;';
+      } else if (msg.toLowerCase().includes('storage') && !msg.toLowerCase().includes('permission')) {
+        helpfulMsg = '\n\n👉 HINT: Make sure Firebase Storage is enabled in your Firebase console (click "Get Started" in Storage tab).';
+      }
+
+      const fullMsg = '❌ Error: ' + msg + helpfulMsg;
+      setSubmitError(fullMsg.replace(/\n/g, ' '));
+      // Alert with full message including newlines
+      alert(fullMsg);
+    } finally {
+      console.log('🔚 Finally: Resetting submitting state');
+      setSubmitting(false);
+      setTimeout(() => setSubmitProgress(''), 2000);
+    }
+  };
+
   // Step 1
   const [currentStep, setCurrentStep] = useState(1);
   const [lookingTo, setLookingTo] = useState<LookingTo | ''>('');
@@ -374,6 +628,25 @@ export default function PostPropertyPage() {
   const [availability, setAvailability] = useState<AvailabilityStatus | ''>('');
   const [showStep3Errors, setShowStep3Errors] = useState(false);
 
+  // Step 3 — Project Profile extras
+  const [inventoryType, setInventoryType] = useState('');
+  const [projectName, setProjectName] = useState('');
+  const [developerName, setDeveloperName] = useState('');
+  const [projectLocation, setProjectLocation] = useState('');
+  const [landArea, setLandArea] = useState('');
+  const [totalTowers, setTotalTowers] = useState('');
+  const [totalResidences, setTotalResidences] = useState('');
+  const [reraNumber, setReraNumber] = useState('');
+  const [configurations, setConfigurations] = useState<string[]>([]);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [connectivityHighlights, setConnectivityHighlights] = useState<string[]>(['', '', '', '']);
+  const [locationOverview, setLocationOverview] = useState('');
+
+  // Step 4 — Media state (lifted to parent for submit handler access)
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [videos, setVideos] = useState<File[]>([]);
+  const [voiceOver, setVoiceOver] = useState<File | null>(null);
+
   // Step 5 — Pricing & Others
   const [expectedPrice, setExpectedPrice] = useState('');
   const [priceUnit, setPriceUnit] = useState<PriceUnit>('Total Price');
@@ -402,6 +675,42 @@ export default function PostPropertyPage() {
   };
 
   const types = propertyCategory === 'Residential' ? residentialTypes : commercialTypes;
+
+  // ── Auth checks ──────────────────────────────────────────────────────────
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <svg className="animate-spin w-10 h-10" viewBox="0 0 24 24" fill="none" style={{ color: PRIMARY }}>
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <p className="text-sm text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-lg border border-gray-200 p-8 text-center">
+          <svg className="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          <h2 className="text-lg font-bold text-slate-800 mb-2">Login Required</h2>
+          <p className="text-sm text-gray-500 mb-6">You must be logged in to post a property.</p>
+          <Link
+            href="/login"
+            className="inline-flex items-center justify-center px-6 py-2.5 rounded-md text-white font-semibold text-sm"
+            style={{ backgroundColor: PRIMARY }}
+          >
+            Go to Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -719,6 +1028,142 @@ export default function PostPropertyPage() {
                 </div>
               </div>
 
+              {/* ── Project Overview ─────────────────────────────────── */}
+              <div className="mb-8 pb-8 border-b border-gray-100">
+                <h3 className="text-lg font-bold text-slate-800 mb-4">Project Overview</h3>
+                <div className="space-y-3">
+                  {[
+                    { label: 'Inventory Type', value: inventoryType, set: setInventoryType, placeholder: 'e.g. Exclusive Available Residence' },
+                    { label: 'Project Name', value: projectName, set: setProjectName, placeholder: 'e.g. Vaastu Homes' },
+                    { label: 'Developer', value: developerName, set: setDeveloperName, placeholder: 'e.g. Vaastu Builders' },
+                    { label: 'Location', value: projectLocation, set: setProjectLocation, placeholder: 'e.g. Siddharth Vihar, Ghaziabad' },
+                    { label: 'Project Land Area', value: landArea, set: setLandArea, placeholder: 'e.g. Approx. 5 Acres' },
+                    { label: 'Total Towers', value: totalTowers, set: setTotalTowers, placeholder: 'e.g. 3 Towers' },
+                    { label: 'Total Residences', value: totalResidences, set: setTotalResidences, placeholder: 'e.g. 250 Residences' },
+                    { label: 'RERA Number', value: reraNumber, set: setReraNumber, placeholder: 'e.g. UPRERAPRJ123456/2024' },
+                  ].map(({ label, value, set, placeholder }) => (
+                    <div key={label} className="grid grid-cols-2 gap-3 items-center border-b border-gray-50 pb-2">
+                      <span className="text-sm font-semibold text-slate-700">{label}</span>
+                      <input
+                        type="text"
+                        value={value}
+                        onChange={e => set(e.target.value)}
+                        placeholder={placeholder}
+                        className="px-3 py-2 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors"
+                        style={{ borderColor: value ? PRIMARY : '#d1d5db' }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Configurations ───────────────────────────────────── */}
+              <div className="mb-8 pb-8 border-b border-gray-100">
+                <h3 className="text-lg font-bold text-slate-800 mb-4">Configurations</h3>
+                <p className="text-xs text-gray-400 mb-3">Select all that apply</p>
+                <div className="flex flex-wrap gap-2">
+                  {['1 RK', '1 BHK', '2 BHK', '3 BHK', '4 BHK', '5 BHK', '5+ BHK', 'Studio', 'Villa', 'Penthouse'].map(cfg => (
+                    <button
+                      key={cfg}
+                      onClick={() => setConfigurations(prev =>
+                        prev.includes(cfg) ? prev.filter(c => c !== cfg) : [...prev, cfg]
+                      )}
+                      className="px-4 py-1.5 rounded-full border text-sm font-semibold transition-all"
+                      style={{
+                        borderColor: configurations.includes(cfg) ? PRIMARY : '#d1d5db',
+                        backgroundColor: configurations.includes(cfg) ? PRIMARY : 'white',
+                        color: configurations.includes(cfg) ? 'white' : '#64748b',
+                      }}
+                    >
+                      {cfg}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Amenities ────────────────────────────────────────── */}
+              <div className="mb-8 pb-8 border-b border-gray-100">
+                <h3 className="text-lg font-bold text-slate-800 mb-4">Amenities</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {[
+                    'Clubhouse & Lounge', 'Swimming Pool', 'Landscaped Gardens',
+                    'Modern Gym', 'Indoor Games', 'Kids Play Area',
+                    '24x7 Security', 'Power Back-up', 'Lift',
+                    'Intercom', 'CCTV', 'Visitor Parking',
+                    'Jogging Track', 'Yoga / Meditation', 'Multipurpose Hall',
+                    'Sports Court', 'Concierge', 'EV Charging',
+                  ].map(amenity => (
+                    <label key={amenity} className="flex items-center gap-2 cursor-pointer group">
+                      <div
+                        onClick={() => setSelectedAmenities(prev =>
+                          prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
+                        )}
+                        className="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors"
+                        style={{
+                          borderColor: selectedAmenities.includes(amenity) ? PRIMARY : '#d1d5db',
+                          backgroundColor: selectedAmenities.includes(amenity) ? PRIMARY : 'white',
+                        }}
+                      >
+                        {selectedAmenities.includes(amenity) && (
+                          <svg className="w-3 h-3" fill="none" stroke="white" strokeWidth={3} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className="text-sm text-slate-600 group-hover:text-slate-800">{amenity}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Location & Connectivity ───────────────────────────── */}
+              <div className="mb-8 pb-8 border-b border-gray-100">
+                <h3 className="text-lg font-bold text-slate-800 mb-1">Location That Continues To Drive Demand</h3>
+                <p className="text-xs text-gray-400 mb-3">Describe why this location is desirable</p>
+                <textarea
+                  value={locationOverview}
+                  onChange={e => setLocationOverview(e.target.value)}
+                  placeholder="e.g. Siddharth Vihar, Ghaziabad has consistently remained one of the most desirable residential locations..."
+                  rows={3}
+                  className="w-full px-3 py-2.5 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors resize-none mb-5"
+                  style={{ borderColor: locationOverview ? PRIMARY : '#d1d5db' }}
+                />
+
+                <h4 className="text-base font-bold text-slate-800 mb-3">Connectivity Highlights</h4>
+                <div className="space-y-2">
+                  {connectivityHighlights.map((item, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="text-gray-400 text-sm">•</span>
+                      <input
+                        type="text"
+                        value={item}
+                        onChange={e => {
+                          const updated = [...connectivityHighlights];
+                          updated[i] = e.target.value;
+                          setConnectivityHighlights(updated);
+                        }}
+                        placeholder={`e.g. Metro Station - 2 KM`}
+                        className="flex-1 px-3 py-2 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors"
+                        style={{ borderColor: item ? PRIMARY : '#d1d5db' }}
+                      />
+                      {connectivityHighlights.length > 1 && (
+                        <button
+                          onClick={() => setConnectivityHighlights(prev => prev.filter((_, idx) => idx !== i))}
+                          className="text-gray-400 hover:text-red-400 transition-colors text-sm"
+                        >✕</button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => setConnectivityHighlights(prev => [...prev, ''])}
+                    className="text-sm font-semibold mt-1"
+                    style={{ color: PRIMARY }}
+                  >
+                    + Add more
+                  </button>
+                </div>
+              </div>
+
               <button onClick={handleContinue}
                 className="px-8 py-2.5 rounded-md text-white font-semibold text-sm"
                 style={{ backgroundColor: PRIMARY }}>
@@ -729,7 +1174,16 @@ export default function PostPropertyPage() {
 
           {/* Step 4: Photos, Videos & Voice-over */}
           {currentStep === 4 && (
-            <Step4MediaUpload onBack={() => setCurrentStep(3)} onContinue={() => setCurrentStep(5)} />
+            <Step4MediaUpload
+              onBack={() => setCurrentStep(3)}
+              onContinue={() => setCurrentStep(5)}
+              photos={photos}
+              setPhotos={setPhotos}
+              videos={videos}
+              setVideos={setVideos}
+              voiceOver={voiceOver}
+              setVoiceOver={setVoiceOver}
+            />
           )}
 
           {/* Step 5 — Pricing & Others */}
@@ -893,17 +1347,35 @@ export default function PostPropertyPage() {
                 </div>
               </div>
 
+              {/* Submit error */}
+              {submitError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+                  ❌ {submitError}
+                </div>
+              )}
+
               {/* Submit */}
               <button
-                onClick={() => {
-                  if (!expectedPrice) { setShowStep5Errors(true); return; }
-                  alert('Property submitted successfully!');
-                }}
-                className="px-8 py-2.5 rounded-md text-white font-semibold text-sm transition-all"
+                onClick={handleSubmitProperty}
+                disabled={submitting}
+                className="px-8 py-2.5 rounded-md text-white font-semibold text-sm transition-all flex items-center gap-2 disabled:opacity-80 disabled:cursor-not-allowed min-w-[200px] justify-center"
                 style={{ backgroundColor: PRIMARY }}
               >
-                Submit Property
+                {submitting && (
+                  <svg className="animate-spin w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                )}
+                {submitting ? (submitProgress || 'Submitting...') : 'Submit Property'}
               </button>
+              {/* Progress info below button for better visibility */}
+              {submitting && submitProgress && (
+                <p className="mt-2 text-xs text-gray-500 italic flex items-center gap-1.5">
+                  <span className="inline-flex w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  {submitProgress}
+                </p>
+              )}
             </>
           )}
         </div>

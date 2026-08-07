@@ -3,8 +3,6 @@ import { Lexend_Deca } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import PremiumBanner from "@/components/PremiumBanner";
-import ScrollingBanner from "@/components/ScrollingBanner";
 import LoginPopup from "@/components/LoginPopup";
 
 const lexendDeca = Lexend_Deca({
@@ -31,8 +29,6 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <LoginPopup />
         <Header />
-        <PremiumBanner />
-        <ScrollingBanner />
         <main className="flex-1" suppressHydrationWarning>{children}</main>
         <Footer />
       </body>

@@ -62,11 +62,11 @@ export default function Header() {
 
   return (
     <header ref={menuRef} className="w-full bg-white border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 relative">
 
           {/* Logo */}
-          <div className="flex items-center -ml-3">
+          <div className="flex items-center ml-6">
             <Link href="/" className="flex items-center">
               <Image
                 src="/neha-logo.png"
@@ -80,14 +80,51 @@ export default function Header() {
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-8 absolute left-[43%] -translate-x-1/2">
             <Link href="/" className="text-gray-700 font-medium transition-colors hover:text-[#1a2744]">Home</Link>
-            <Link href="/projects" className="text-gray-700 font-medium transition-colors hover:text-[#1a2744] flex items-center">
-              Projects
-              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </Link>
+            
+            {/* Projects Dropdown */}
+            <div className="relative group">
+              <button className="text-gray-700 font-medium transition-colors hover:text-[#1a2744] flex items-center gap-1">
+                Projects
+                <svg className="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                {[
+                  { href: '/projects/ats-knightsbridge', label: 'ATS Knightsbridge' },
+                  { href: '/projects/m3m-cullinan', label: 'M3M Cullinan' },
+                  { href: '/projects/m3m-jacob-and-co', label: 'M3M Jacob & Co' },
+                  { href: '/projects/smartworld-elie-saab', label: 'Smartworld Elie Saab' },
+                  { href: '/projects/trump-tower', label: 'Trump Tower' },
+                  { href: '/projects/max-estate-128', label: 'Max Estate 128' },
+                  { href: '/projects/max-estate-105', label: 'Max Estate 105' },
+                  { href: '/projects/dasnac-westminster', label: 'Dasnac Westminster' },
+                  { href: '/projects/gulshan-taj-residences', label: 'Gulshan Taj Residences' },
+                  { href: '/projects/gulshan-dynasty', label: 'Gulshan Dynasty' },
+                ].map(({ href, label }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="block px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#1a2744] transition-colors"
+                  >
+                    {label}
+                  </Link>
+                ))}
+                <div className="border-t border-gray-100 mt-1 pt-1">
+                  <Link
+                    href="/projects"
+                    className="block px-5 py-2.5 text-sm font-semibold text-[#1a2744] hover:bg-gray-50 transition-colors"
+                  >
+                    View All Projects →
+                  </Link>
+                </div>
+              </div>
+            </div>
+
             <Link href="/about" className="text-gray-700 font-medium transition-colors hover:text-[#1a2744]">About</Link>
             <Link href="/testimonials" className="text-gray-700 font-medium transition-colors hover:text-[#1a2744]">Testimonials</Link>
             <Link href="/contact" className="text-gray-700 font-medium transition-colors hover:text-[#1a2744]">Contact</Link>
@@ -186,7 +223,7 @@ export default function Header() {
                           Post Property
                         </Link>
                         <Link
-                          href="/projects"
+                          href="/my-properties"
                           onClick={() => setUserDropdownOpen(false)}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                         >

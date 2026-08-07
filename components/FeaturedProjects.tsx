@@ -1,8 +1,10 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ProjectDetail from './ProjectDetail';
+import { collection, getDocs, orderBy, query, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 // Static dummy data - replace with dynamic data later
 const projects = [
@@ -160,14 +162,89 @@ const projects = [
 
 const categories = ['All', 'Residential', 'Commercial', 'Plots'];
 
+type FProject = typeof projects[0] & { firestoreId?: string };
+
+function firestoreDocToFProject(docId: string, data: Record<string, any>, startId: number): FProject {
+  const photos: string[] = data.photos || [];
+  const image = data.image || data.imageUrl || data.heroImage || photos[0]
+    || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=800&auto=format&fit=crop';
+  const heroImage = data.heroImage || photos[0] || image;
+
+  let price = 'Price on Request';
+  if (data.expectedPrice && Number(data.expectedPrice) > 0) {
+    const amt = Number(data.expectedPrice);
+    price = amt >= 10000000
+      ? `₹${(amt / 10000000).toFixed(2).replace(/\.?0+$/, '')} Cr onwards`
+      : amt >= 100000
+        ? `₹${(amt / 100000).toFixed(2).replace(/\.?0+$/, '')} Lac onwards`
+        : `₹${amt.toLocaleString('en-IN')} onwards`;
+  } else if (data.price) {
+    price = data.price;
+  }
+
+  const cat = data.propertyCategory === 'Commercial' ? 'Commercial'
+    : data.propertyType?.toLowerCase().includes('plot') ? 'Plots'
+    : data.category || 'Residential';
+
+  return {
+    id: startId,
+    firestoreId: docId,
+    name: data.projectName || data.name || `${data.propertyType || 'Property'} in ${data.city || 'NCR'}`,
+    location: data.projectLocation || data.location || `${data.locality || ''}, ${data.city || 'NCR'}`.replace(/^, |, $/, ''),
+    price,
+    category: cat,
+    isExclusive: false,
+    image,
+    heroImage,
+    status: data.availability || data.status || 'Ready to Move',
+    launchYear: data.launchYear || new Date().getFullYear().toString(),
+    developer: data.developer || data.developerName || '',
+    reraNumber: data.reraNumber || '',
+    overview: data.overview || `A ${data.propertyType || 'property'} in ${data.city || 'NCR'}.`,
+    details: data.details?.length ? data.details : [
+      { label: 'Inventory Type', value: data.inventoryType || '' },
+      { label: 'Project', value: data.projectName || '' },
+      { label: 'Developer', value: data.developer || '' },
+      { label: 'Location', value: data.projectLocation || data.location || '' },
+      { label: 'RERA Number', value: data.reraNumber || '' },
+      { label: 'Status', value: data.availability || data.status || '' },
+    ].filter(d => d.value),
+    amenitiesImage: photos[photos.length - 1] || heroImage,
+    amenitiesCaption: 'Property Amenities',
+    locationHighlights: data.connectivityHighlights || data.locationHighlights || [],
+    configurations: Array.isArray(data.configurations) ? data.configurations : (data.bedrooms ? [`${data.bedrooms} BHK`] : []),
+    amenities: Array.isArray(data.amenities) ? data.amenities : [],
+  };
+}
+
 export default function FeaturedProjects() {
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedProject, setSelectedProject] = useState<typeof projects[0] | null>(null);
+  const [selectedProject, setSelectedProject] = useState<FProject | null>(null);
+  const [firestoreProjects, setFirestoreProjects] = useState<FProject[]>([]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const q = query(collection(db, 'properties'), orderBy('createdAt', 'desc'), limit(8));
+        const snapshot = await getDocs(q);
+        const fetched: FProject[] = snapshot.docs.map((doc, i) =>
+          firestoreDocToFProject(doc.id, doc.data() as Record<string, any>, 10000 + i)
+        );
+        setFirestoreProjects(fetched);
+      } catch (err) {
+        console.error('FeaturedProjects: Firestore fetch failed:', err);
+      }
+    };
+    fetchProjects();
+  }, []);
+
+  // Firestore projects first, then hardcoded
+  const allProjects: FProject[] = [...firestoreProjects, ...projects];
 
   // Filter projects based on selected category
   const filteredProjects = selectedCategory === 'All'
-    ? projects
-    : projects.filter(project => project.category === selectedCategory);
+    ? allProjects
+    : allProjects.filter(project => project.category === selectedCategory);
 
   return (
     <section className="w-full py-12 md:py-16 bg-white">
@@ -214,6 +291,7 @@ export default function FeaturedProjects() {
                   src={project.image}
                   alt={project.name}
                   fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 {/* Exclusive Badge */}
@@ -259,7 +337,7 @@ export default function FeaturedProjects() {
       {/* Project Detail Modal */}
       {selectedProject && (
         <ProjectDetail 
-          project={selectedProject} 
+          project={selectedProject as any}
           onClose={() => setSelectedProject(null)} 
         />
       )}

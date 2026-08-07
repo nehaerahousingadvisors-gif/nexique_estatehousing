@@ -1,8 +1,11 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import ProjectDetail from '@/components/ProjectDetail';
+import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 type MediaItem = {
   id: number;
@@ -14,6 +17,7 @@ type MediaItem = {
 
 type Project = {
   id: number;
+  firestoreId?: string;
   name: string;
   location: string;
   price: string;
@@ -567,14 +571,155 @@ const projects: Project[] = [
 
 const categories = ['All', 'Residential', 'Commercial', 'Plots', 'Luxury Residential'];
 
-export default function ProjectsPage() {
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedProject, setSelectedProject] = useState<typeof projects[0] | null>(null);
+// ── Helper: map a Firestore doc to the Project shape ─────────────────────────
+function firestoreDocToProject(docId: string, data: Record<string, any>, startId: number): Project {
+  const photos: string[] = data.photos || [];
+  const image = data.image || data.imageUrl || data.heroImage || photos[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=800&auto=format&fit=crop';
+  const heroImage = data.heroImage || data.imageUrl || photos[0] || image;
 
-  // Filter projects based on selected category
-  const filteredProjects = selectedCategory === 'All'
-    ? projects
-    : projects.filter(project => project.category === selectedCategory);
+  // Build price string
+  let price = 'Price on Request';
+  if (data.expectedPrice && Number(data.expectedPrice) > 0) {
+    const amt = Number(data.expectedPrice);
+    const formatted = amt >= 10000000
+      ? `₹${(amt / 10000000).toFixed(2).replace(/\.?0+$/, '')} Cr onwards`
+      : amt >= 100000
+        ? `₹${(amt / 100000).toFixed(2).replace(/\.?0+$/, '')} Lac onwards`
+        : `₹${amt.toLocaleString('en-IN')} onwards`;
+    price = formatted;
+  } else if (data.price) {
+    price = data.price;
+  }
+
+  // Determine category
+  const cat = data.propertyCategory === 'Commercial' ? 'Commercial'
+    : data.propertyType?.toLowerCase().includes('plot') ? 'Plots'
+    : data.category || 'Residential';
+
+  return {
+    id: startId,
+    firestoreId: docId,
+    name: data.projectName || data.name || `${data.propertyType || 'Property'} in ${data.locality || data.city || 'NCR'}`,
+    location: data.projectLocation || data.location || `${data.locality || ''}, ${data.city || 'NCR'}`.replace(/^, |, $/, ''),
+    price,
+    category: cat,
+    isExclusive: false,
+    image,
+    heroImage,
+    status: data.availability || data.status || 'Ready to Move',
+    launchYear: data.launchYear || new Date().getFullYear().toString(),
+    developer: data.developer || data.developerName || '',
+    reraNumber: data.reraNumber || '',
+    overview: data.overview || `A ${data.propertyType || 'property'} in ${data.city || 'NCR'}.`,
+    details: data.details?.length ? data.details : [
+      { label: 'Inventory Type', value: data.inventoryType || data.propertyType || '' },
+      { label: 'Project', value: data.projectName || '' },
+      { label: 'Developer', value: data.developer || '' },
+      { label: 'Location', value: data.projectLocation || data.location || '' },
+      { label: 'Project Land Area', value: data.landArea || '' },
+      { label: 'Total Towers', value: data.totalTowers || '' },
+      { label: 'Total Residences', value: data.totalResidences || '' },
+      { label: 'RERA Number', value: data.reraNumber || '' },
+      { label: 'Status', value: data.availability || data.status || '' },
+    ].filter(d => d.value),
+    amenitiesImage: photos[photos.length - 1] || heroImage,
+    amenitiesCaption: 'Property Amenities',
+    locationHighlights: data.connectivityHighlights || data.locationHighlights || [],
+    configurations: Array.isArray(data.configurations) ? data.configurations : (data.bedrooms ? [`${data.bedrooms} BHK`] : []),
+    amenities: Array.isArray(data.amenities) ? data.amenities : [],
+    mediaGallery: data.mediaGallery?.length ? data.mediaGallery : photos.map((url: string, i: number) => ({
+      id: i + 1, type: 'image' as const, url, caption: `Photo ${i + 1}`,
+    })),
+  };
+}
+
+export default function ProjectsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <svg className="animate-spin w-10 h-10" viewBox="0 0 24 24" fill="none" style={{ color: '#1a2744' }}>
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+      </div>
+    }>
+      <ProjectsContent />
+    </Suspense>
+  );
+}
+
+function ProjectsContent() {
+  const searchParams = useSearchParams();
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [firestoreProjects, setFirestoreProjects] = useState<Project[]>([]);
+  const [loadingFirestore, setLoadingFirestore] = useState(true);
+
+  // Fetch from Firestore
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const q = query(collection(db, 'properties'), orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        const fetched: Project[] = snapshot.docs.map((doc, i) =>
+          firestoreDocToProject(doc.id, doc.data() as Record<string, any>, 10000 + i)
+        );
+        setFirestoreProjects(fetched);
+      } catch (err) {
+        console.error('Failed to fetch from Firestore:', err);
+      } finally {
+        setLoadingFirestore(false);
+      }
+    };
+    fetchProjects();
+  }, []);
+
+  // Merge: Firestore projects first, then hardcoded
+  const allProjects = [...firestoreProjects, ...projects];
+
+  // Apply search filters from URL params
+  useEffect(() => {
+    const urlCategory = searchParams.get('type');
+    if (urlCategory) {
+      if (categories.includes(urlCategory)) {
+        setSelectedCategory(urlCategory);
+      } else if (urlCategory.toLowerCase().includes('residential')) {
+        setSelectedCategory('Residential');
+      } else if (urlCategory.toLowerCase().includes('commercial')) {
+        setSelectedCategory('Commercial');
+      }
+    }
+  }, [searchParams]);
+
+  // Filter projects based on selected category and search params
+  const filteredProjects = allProjects.filter(project => {
+    // Category filter
+    if (selectedCategory !== 'All' && project.category !== selectedCategory) {
+      return false;
+    }
+
+    // Search query (q param) - search in name, location, developer
+    const searchQuery = searchParams.get('q');
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = 
+        project.name.toLowerCase().includes(query) ||
+        project.location.toLowerCase().includes(query) ||
+        project.developer.toLowerCase().includes(query) ||
+        project.category.toLowerCase().includes(query);
+      if (!matchesSearch) return false;
+    }
+
+    // Location filter
+    const locationParam = searchParams.get('location');
+    if (locationParam) {
+      if (!project.location.toLowerCase().includes(locationParam.toLowerCase())) {
+        return false;
+      }
+    }
+
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -618,6 +763,15 @@ export default function ProjectsPage() {
 
           {/* Projects Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 md:gap-8">
+            {loadingFirestore && firestoreProjects.length === 0 && (
+              <div className="col-span-full flex justify-center items-center py-12">
+                <svg className="animate-spin w-8 h-8 mr-3" viewBox="0 0 24 24" fill="none" style={{ color: '#1a2744' }}>
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span className="text-slate-500 text-sm">Loading projects...</span>
+              </div>
+            )}
             {filteredProjects.map(project => (
               <div 
                 key={project.id} 
@@ -630,6 +784,7 @@ export default function ProjectsPage() {
                     src={project.image}
                     alt={project.name}
                     fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     className="object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                   {/* Exclusive Badge */}

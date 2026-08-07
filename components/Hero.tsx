@@ -33,6 +33,17 @@ export default function Hero() {
 
   const currentOptions = propertyOptions[activeTab] ?? propertyOptions['default'];
 
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('q', searchQuery);
+    if (activeTab) params.set('tab', activeTab);
+    if (propertyType) params.set('type', propertyType);
+    if (selectedLocation) params.set('location', selectedLocation);
+    
+    const queryString = params.toString();
+    router.push(`/projects${queryString ? `?${queryString}` : ''}`);
+  };
+
   const handleTabChange = (tab: string) => {
     if (tab === 'Sell') { router.push('/post-property'); return; }
     if (tab === 'Projects') { router.push('/projects'); return; }
@@ -64,7 +75,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative w-full min-h-[600px] md:min-h-[700px] overflow-hidden">
+    <section className="relative w-full min-h-[700px] md:min-h-[820px] overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop)' }}
@@ -72,27 +83,27 @@ export default function Hero() {
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-slate-900/90" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-center py-12">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-start pt-24 pb-20 md:pt-36 md:pb-32">
         {/* Badge */}
-        <div className="mb-4">
+        <div className="mb-3 md:mb-4">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-white/20 rounded-full">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#C4A35A' }}>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="text-white text-xs">8th Consistent Award-Winning Year</span>
+            <span className="text-white text-xs font-medium">8th Consistent Award-Winning Year</span>
           </div>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-white text-center mb-3 md:mb-6 leading-tight">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-left mb-2 md:mb-3 leading-tight">
           Find Your <span style={{ color: '#C4A35A' }}>Dream Projects</span> in Delhi NCR
         </h1>
 
-        <p className="text-gray-300 text-xs sm:text-sm md:text-lg text-center mb-6 md:mb-10 max-w-2xl px-2">
+        <p className="text-gray-300 text-xs sm:text-sm text-left mb-5 md:mb-7 max-w-lg leading-relaxed">
           Search RERA-approved residential & commercial projects for sale, rent, or lease across Noida, Greater Noida, Central Noida & Yamuna Expressway.
         </p>
 
         {/* Search Box */}
-        <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-visible relative" ref={popupRef}>
+        <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-visible relative" ref={popupRef}>
 
           {/* Tabs */}
           <div className="flex items-center border-b border-gray-100 px-1 overflow-x-auto scrollbar-hide">
@@ -100,8 +111,8 @@ export default function Hero() {
               <button
                 key={tab}
                 onClick={() => handleTabChange(tab)}
-                className="relative flex-shrink-0 px-3 py-3 text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap"
-                style={{ color: activeTab === tab ? NAVY : '#475569' }}
+                className="relative flex-shrink-0 px-3 py-2.5 text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap"
+                style={{ color: activeTab === tab ? NAVY : '#64748b' }}
               >
                 {tab}
                 {activeTab === tab && (
@@ -109,10 +120,10 @@ export default function Hero() {
                 )}
               </button>
             ))}
-            <div className="ml-auto flex-shrink-0 px-2 py-2">
+            <div className="ml-auto flex-shrink-0 px-2 py-1.5">
               <Link
                 href="/post-property"
-                className="hidden sm:flex items-center gap-2 px-3 py-2 text-white rounded-xl font-semibold transition-colors text-xs sm:text-sm whitespace-nowrap"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-white rounded-lg font-semibold transition-colors text-xs whitespace-nowrap"
                 style={{ backgroundColor: NAVY }}
                 onMouseEnter={e => (e.currentTarget.style.backgroundColor = NAVY_DARK)}
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = NAVY)}
@@ -123,13 +134,13 @@ export default function Hero() {
           </div>
 
           {/* Search Row */}
-          <div className="flex items-center px-2 py-2 gap-1">
+          <div className="flex items-center px-2 py-2 gap-1.5">
             {activeTab === 'Lease/Rent' && (
               <div className="flex items-center px-2 py-2 border-r border-gray-200 flex-shrink-0">
                 <select
                   value={propertyType}
                   onChange={(e) => setPropertyType(e.target.value)}
-                  className="bg-transparent text-slate-700 font-semibold outline-none text-xs sm:text-sm cursor-pointer max-w-[90px] sm:max-w-none"
+                  className="bg-transparent text-slate-700 font-semibold outline-none text-xs cursor-pointer max-w-[80px] sm:max-w-none"
                 >
                   {currentOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -138,7 +149,7 @@ export default function Hero() {
               </div>
             )}
 
-            <div className="flex-1 flex items-center gap-1 px-2 min-w-0">
+            <div className="flex-1 flex items-center gap-1.5 px-2 min-w-0">
               <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -146,8 +157,9 @@ export default function Hero() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
                 placeholder='Search "Property in NCR"'
-                className="flex-1 bg-transparent text-slate-700 outline-none text-xs sm:text-sm placeholder-gray-400 py-2 min-w-0"
+                className="flex-1 bg-transparent text-slate-700 outline-none text-xs sm:text-sm placeholder-gray-400 py-1.5 min-w-0"
               />
             </div>
 
@@ -168,7 +180,8 @@ export default function Hero() {
             </div>
 
             <button
-              className="flex items-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5 text-white rounded-xl font-semibold transition-colors text-xs sm:text-sm flex-shrink-0"
+              onClick={handleSearch}
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-white rounded-xl font-semibold transition-colors text-xs sm:text-sm flex-shrink-0"
               style={{ backgroundColor: NAVY }}
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = NAVY_DARK)}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = NAVY)}
@@ -269,15 +282,15 @@ export default function Hero() {
         </div>
 
         {/* Stats */}
-        <div className="mt-6 md:mt-12 grid grid-cols-3 gap-2 md:gap-6 max-w-3xl w-full">
+        <div className="mt-5 md:mt-8 grid grid-cols-3 gap-2 md:gap-4 max-w-lg w-full">
           {[
             { value: '500+', label: 'Happy Clients' },
             { value: '100%', label: 'RERA Approved' },
             { value: '10+', label: 'Years Experience' },
           ].map(({ value, label }) => (
-            <div key={label} className="text-center px-2 py-2.5 md:px-6 md:py-4 border border-white/20 rounded-xl bg-white/10 backdrop-blur-sm">
-              <div className="text-lg md:text-2xl font-bold" style={{ color: '#C4A35A' }}>{value}</div>
-              <div className="text-white/80 text-[10px] md:text-sm">{label}</div>
+            <div key={label} className="text-center px-3 py-2.5 md:px-4 md:py-3 border border-white/20 rounded-xl bg-white/10 backdrop-blur-sm">
+              <div className="text-base md:text-xl font-extrabold mb-0.5" style={{ color: '#C4A35A' }}>{value}</div>
+              <div className="text-white/70 text-[9px] md:text-[11px] font-medium uppercase tracking-wide">{label}</div>
             </div>
           ))}
         </div>

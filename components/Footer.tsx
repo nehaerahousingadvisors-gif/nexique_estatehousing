@@ -9,7 +9,7 @@ export default function Footer() {
   return (
     <footer className="w-full bg-white pt-8 md:pt-12 pb-6 md:pb-8 border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-8 md:mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 md:gap-8 mb-8 md:mb-12">
           <div className="md:col-span-2 lg:col-span-1">
             <div className="flex items-center mb-3 md:mb-4">
               <Image
@@ -70,14 +70,33 @@ export default function Footer() {
             <h3 className="font-semibold mb-3 md:mb-4 text-sm md:text-base" style={{ color: NAVY }}>PROJECTS</h3>
             <ul className="space-y-1.5 md:space-y-2">
               {[
-                { href: '/projects/vaastu-homes', label: 'Vaastu Homes' },
-                { href: '/projects/godrej-nest', label: 'Godrej Nest' },
-                { href: '/projects/godrej-riverine', label: 'Godrej Riverine - Tower 1' },
-                { href: '/projects/jacob-co', label: 'Jacob & Co' },
-                { href: '/projects/m3m-trump', label: 'M3M Trump' },
-                { href: '/projects/m3m-the-line', label: 'M3M The Line' },
-                { href: '/projects/grandthum', label: 'Grandthum By Group 108' },
-                { href: '/projects/gygy-fiveo', label: 'GYGY FIVEO' },
+                { href: '/projects/ats-knightsbridge', label: 'ATS Knightsbridge' },
+                { href: '/projects/m3m-cullinan', label: 'M3M Cullinan' },
+                { href: '/projects/m3m-jacob-and-co', label: 'M3M Jacob & Co' },
+                { href: '/projects/smartworld-elie-saab', label: 'Smartworld Elie Saab' },
+                { href: '/projects/trump-tower', label: 'Trump Tower' },
+                { href: '/projects/max-estate-128', label: 'Max Estate 128' },
+                { href: '/projects/max-estate-105', label: 'Max Estate 105' },
+                { href: '/projects/dasnac-westminster', label: 'Dasnac Westminster' },
+                { href: '/projects/gulshan-taj-residences', label: 'Gulshan Taj Residences' },
+                { href: '/projects/gulshan-dynasty', label: 'Gulshan Dynasty' },
+              ].map(({ href, label }) => (
+                <li key={href}>
+                  <Link href={href} className="text-gray-600 text-xs md:text-sm transition-colors hover:text-[#1a2744]">{label}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-3 md:mb-4 text-sm md:text-base" style={{ color: NAVY }}>CENTRAL NOIDA</h3>
+            <ul className="space-y-1.5 md:space-y-2">
+              {[
+                { href: '/projects/kothis', label: "Kothi's" },
+                { href: '/projects/dasnac-burj', label: 'Dasnac Burj' },
+                { href: '/projects/godrej-riverine', label: 'Godrej Riverine' },
+                { href: '/projects/godrej-woods', label: 'Godrej Woods' },
+                { href: '/projects/max-towers-16b', label: 'Max Towers 16B' },
               ].map(({ href, label }) => (
                 <li key={href}>
                   <Link href={href} className="text-gray-600 text-xs md:text-sm transition-colors hover:text-[#1a2744]">{label}</Link>
