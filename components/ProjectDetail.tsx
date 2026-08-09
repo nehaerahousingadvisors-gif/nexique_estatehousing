@@ -405,59 +405,40 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
             </ul>
           </div>
 
-          {/* Amenities Image Section */}
-          <div className="px-8 md:px-12 py-10 border-t border-slate-200">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">A Lifestyle Designed Around Wellness</h2>
-            <div className="relative rounded-xl overflow-hidden shadow-xl">
-              <div className="aspect-video">
-                <Image 
-                  src={project.amenitiesImage} 
-                  alt={project.amenitiesCaption}
-                  fill
-                  sizes="100vw"
-                  className="object-cover"
-                />
-              </div>
-              <div className="bg-white px-6 py-4 text-center">
-                <p className="text-slate-600">{project.amenitiesCaption}</p>
-              </div>
-            </div>
-          </div>
-
           {/* Photos & Videos Section */}
-          <div className="px-8 md:px-12 py-10 border-t border-slate-200">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">Photos & Videos</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="px-8 md:px-12 py-6 border-t border-slate-200">
+            <h2 className="text-lg font-bold text-slate-900 mb-4">Photos & Videos</h2>
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
               {mediaGallery.map((media, index) => (
-                <div 
+                <div
                   key={media.id}
-                  className="relative group cursor-pointer rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500"
+                  className="relative group cursor-pointer rounded-lg overflow-hidden shadow hover:shadow-md transition-all duration-300"
                   onClick={() => {
                     setSelectedMediaIndex(index);
                     setIsFullscreen(true);
                   }}
                 >
                   {media.type === 'image' ? (
-                    <div className="aspect-video relative">
-                      <Image 
+                    <div className="aspect-square relative">
+                      <Image
                         src={media.url}
                         alt={media.caption || 'Project Photo'}
                         fill
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        className="object-cover group-hover:scale-110 transition-transform duration-700"
+                        sizes="(max-width: 640px) 33vw, 20vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     </div>
                   ) : (
-                    <div className="aspect-video relative bg-slate-900">
+                    <div className="aspect-square relative bg-slate-900">
                       <video
                         src={media.url}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        className="w-full h-full object-cover"
                         muted
                         playsInline
                       />
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-20 h-20 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center group-hover:bg-black/70 transition-colors">
-                          <svg className="w-10 h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                        <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center group-hover:bg-black/70 transition-colors">
+                          <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M8 5v14l11-7z" />
                           </svg>
                         </div>
@@ -465,8 +446,8 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
                     </div>
                   )}
                   {media.caption && (
-                    <div className="bg-gradient-to-t from-slate-900 to-transparent absolute bottom-0 left-0 right-0 p-6">
-                      <p className="text-white font-medium text-lg">{media.caption}</p>
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
+                      <p className="text-white text-[10px] font-medium truncate">{media.caption}</p>
                     </div>
                   )}
                 </div>

@@ -8,8 +8,12 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-lexend-deca);
-  --font-mono: var(--font-lexend-deca);
+  --font-sans: var(--font-lexend-deca), Arial, Helvetica, sans-serif;
+  --font-mono: var(--font-lexend-deca), monospace;
+}
+
+html {
+  font-family: var(--font-lexend-deca), Arial, Helvetica, sans-serif;
 }
 
 body {

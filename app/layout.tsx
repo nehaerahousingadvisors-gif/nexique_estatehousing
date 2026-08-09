@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${lexendDeca.variable} h-full antialiased`}
+      className={`${lexendDeca.variable} ${lexendDeca.className} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
