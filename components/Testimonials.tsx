@@ -34,16 +34,16 @@ export default function Testimonials() {
   const current = testimonials[currentTestimonial];
 
   return (
-    <section className="w-full py-16" style={{ backgroundColor: NAVY }}>
+    <section className="w-full py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <p className="text-sm uppercase tracking-widest mb-2" style={{ color: '#C4A35A' }}>TESTIMONIALS</p>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">What our clients say</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: NAVY }}>What our clients say</h2>
         </div>
 
         <div className="max-w-4xl mx-auto">
           <div className="relative">
-            <div className="bg-white/10 backdrop-blur-sm p-8 md:p-12 rounded-3xl border border-white/20">
+            <div className="bg-[#1a2744] p-8 md:p-12 rounded-3xl border border-white/10 shadow-sm">
               <div className="mb-4" style={{ color: '#C4A35A' }}>
                 <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
@@ -58,15 +58,15 @@ export default function Testimonials() {
                 ))}
               </div>
 
-              <p className="text-slate-300 text-lg md:text-xl mb-6 leading-relaxed">{current.quote}</p>
+              <p className="text-gray-200 text-lg md:text-xl mb-6 leading-relaxed">{current.quote}</p>
 
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg" style={{ backgroundColor: '#C4A35A' }}>
                   {current.name.charAt(0)}
                 </div>
                 <div>
-                  <p className="text-white font-semibold">{current.name}</p>
-                  <p className="text-slate-400 text-sm">{current.role}</p>
+                  <p className="font-semibold text-white">{current.name}</p>
+                  <p className="text-gray-400 text-sm">{current.role}</p>
                 </div>
               </div>
             </div>
@@ -78,7 +78,7 @@ export default function Testimonials() {
                     key={index}
                     onClick={() => setCurrentTestimonial(index)}
                     className="w-8 h-1 rounded-full transition-all"
-                    style={{ backgroundColor: index === currentTestimonial ? '#C4A35A' : '#334155' }}
+                    style={{ backgroundColor: index === currentTestimonial ? '#C4A35A' : '#d1d5db' }}
                   />
                 ))}
               </div>
@@ -88,7 +88,7 @@ export default function Testimonials() {
           <div className="flex justify-center gap-3 mt-12">
             <button
               onClick={() => setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length)}
-              className="w-10 h-10 rounded-full border border-slate-600 flex items-center justify-center text-slate-300 hover:bg-white/10 transition-colors"
+              className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />

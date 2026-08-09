@@ -537,7 +537,7 @@ export default function PostPropertyPage() {
         status: availability || 'Ready to move',
         developer: developerName || '',
         launchYear: new Date().getFullYear().toString(),
-        overview: `A ${selectedType || 'property'} in ${locality || city} for ${lookingTo || 'Sale'}`,
+        overview: propertyOverview || `A ${selectedType || 'property'} in ${locality || city} for ${lookingTo || 'Sale'}`,
         area: plotArea ? `${plotArea} ${plotUnit}` : '',
         configurations: configurations.length > 0 ? configurations : (bedrooms ? [`${bedrooms} BHK`] : []),
         amenities: selectedAmenities,
@@ -641,6 +641,7 @@ export default function PostPropertyPage() {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [connectivityHighlights, setConnectivityHighlights] = useState<string[]>(['', '', '', '']);
   const [locationOverview, setLocationOverview] = useState('');
+  const [propertyOverview, setPropertyOverview] = useState('');
 
   // Step 4 — Media state (lifted to parent for submit handler access)
   const [photos, setPhotos] = useState<File[]>([]);
@@ -1026,6 +1027,21 @@ export default function PostPropertyPage() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* ── Property Overview ────────────────────────────────── */}
+              <div className="mb-8 pb-8 border-b border-gray-100">
+                <h3 className="text-lg font-bold text-slate-800 mb-1">Overview</h3>
+                <p className="text-xs text-gray-400 mb-3">Describe your property — highlight key features, unique selling points, surroundings, etc.</p>
+                <textarea
+                  value={propertyOverview}
+                  onChange={e => setPropertyOverview(e.target.value)}
+                  placeholder="e.g. An exclusive luxury residence currently available in Sector 44, Noida. This premium property offers elevated views, exceptional natural light and access to world-class amenities..."
+                  rows={5}
+                  className="w-full px-3 py-2.5 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors resize-none"
+                  style={{ borderColor: propertyOverview ? PRIMARY : '#d1d5db', borderWidth: propertyOverview ? '2px' : '1px' }}
+                />
+                <p className="text-xs text-gray-400 mt-1">{propertyOverview.length} characters</p>
               </div>
 
               {/* ── Project Overview ─────────────────────────────────── */}

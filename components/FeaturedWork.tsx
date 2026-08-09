@@ -5,19 +5,20 @@ import { useRef, useEffect, useState } from 'react';
 
 interface WorkItem {
   id: number;
-  image: string;
+  image?: string;
+  video?: string;
   title: string;
   category: string;
   hasLink?: boolean;
 }
 
 const workItems: WorkItem[] = [
-  { id: 1, image: '/s2.png', title: 'SMART WORLD', category: '' },
-  { id: 2, image: '/s2.png', title: 'SMART WORLD', category: '' },
-  { id: 3, image: '/s3.png', title: 'SMART WORLD', category: '', hasLink: true },
-  { id: 4, image: '/s4.png', title: 'SMART WORLD', category: '' },
-  { id: 5, image: '/S1.png', title: 'SMART WORLD', category: '' },
-  { id: 6, image: '/s2.png', title: 'SMART WORLD', category: '' },
+  { id: 1, image: '/f1.png',  title: 'SMART WORLD', category: '' },
+  { id: 2, image: '/f2.jpg',  title: 'SMART WORLD', category: '' },
+  { id: 3, video: '/v1.mp4',  title: 'SMART WORLD', category: '', hasLink: true },
+  { id: 4, image: '/f1.png',  title: 'SMART WORLD', category: '' },
+  { id: 5, image: '/f2.jpg',  title: 'SMART WORLD', category: '' },
+  { id: 6, image: '/f1.png',  title: 'SMART WORLD', category: '' },
 ];
 
 export default function FeaturedWork() {
@@ -51,10 +52,12 @@ export default function FeaturedWork() {
     <section ref={sectionRef} className="w-full py-10 overflow-hidden relative" style={{ backgroundColor: '#1a2744' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <div className="text-center">
-          <p className="text-xs uppercase tracking-widest mb-2 text-gray-400">
-            <span style={{ color: '#C4A35A' }} className="mr-2">⌐</span>FEATURED
-          </p>
-          <h2 className="text-2xl sm:text-4xl md:text-6xl font-bold text-white">TOP PROJECT</h2>
+          <h3 className="text-2xl sm:text-4xl md:text-6xl font-bold text-white mb-2">AUGUST 15</h3>
+          <h2 className="text-2xl sm:text-4xl md:text-6xl font-bold">
+            <span style={{ color: '#FF9933' }}>Happy </span>
+            <span className="text-white">Independence </span>
+            <span style={{ color: '#138808' }}>Day</span>
+          </h2>
         </div>
       </div>
 
@@ -86,11 +89,18 @@ export default function FeaturedWork() {
               >
                 <div className="relative w-[120px] sm:w-[200px] md:w-[280px] h-[180px] sm:h-[280px] md:h-[360px]">
                   <div className="absolute inset-0 rounded-2xl overflow-hidden border border-white/10">
-                    <Image src={item.image} alt={item.title} fill className="object-contain" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-2 md:p-4 text-center">
-                      <h3 className="text-sm sm:text-lg md:text-2xl font-bold text-white mb-1 leading-tight">{item.title}</h3>
-                    </div>
+                    {item.video ? (
+                      <video
+                        src={item.video}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Image src={item.image!} alt={item.title} fill sizes="280px" className="object-contain" />
+                    )}
                   </div>
                   <div className="absolute -bottom-6 sm:-bottom-8 left-1/2 transform -translate-x-1/2 z-10">
                     <div className="bg-white/10 backdrop-blur-sm border border-white/20 px-2 sm:px-4 py-0.5 sm:py-1 rounded-full">
@@ -112,7 +122,7 @@ export default function FeaturedWork() {
       </div>
 
       <div className="text-center mt-4">
-        <p className="text-white uppercase tracking-widest text-xs">EXPLORE PROJECTS</p>
+        <p className="text-white uppercase tracking-widest text-xs">FREEDOM FROM BRITISH RULE</p>
       </div>
     </section>
   );

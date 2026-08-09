@@ -13,7 +13,7 @@ export default function Footer() {
           <div className="md:col-span-2 lg:col-span-1">
             <div className="flex items-center mb-3 md:mb-4">
               <Image
-                src="/neha-logo.png"
+                src="/15august.png"
                 alt="NEHA - New Era Housing Advisors"
                 width={200}
                 height={200}
@@ -120,7 +120,7 @@ export default function Footer() {
                 </svg>
                 <span className="text-gray-600 text-xs md:text-sm">info@nexiqueestate.com</span>
               </li>
-              <li className="flex items-start">
+              {/* <li className="flex items-start">
                 <svg className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2 mt-0.5 flex-shrink-0" fill="none" stroke={NAVY} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -128,7 +128,7 @@ export default function Footer() {
                 <div className="text-gray-600 text-xs md:text-sm">
                   315, Anthurium Office Spaces, Tower A, Sector-73, Uttar pradesh, 201301
                 </div>
-              </li>
+              </li> */}
             </ul>
           </div>
         </div>
