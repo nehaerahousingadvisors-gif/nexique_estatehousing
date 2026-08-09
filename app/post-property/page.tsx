@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { addDoc, collection, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '@/lib/firebase';
 
 type LookingTo = 'Sell' | 'Rent / Lease';
@@ -370,25 +370,49 @@ export default function PostPropertyPage() {
     return () => unsub();
   }, [router]);
 
-  // Helper: Upload a file to Firebase Storage with 30s timeout
-  const uploadFile = async (file: File, folder: string, namePrefix: string): Promise<string> => {
+  // Helper: Upload a file to Firebase Storage using resumable upload (handles large files)
+  const uploadFile = async (
+    file: File,
+    folder: string,
+    namePrefix: string,
+    onProgress?: (pct: number) => void,
+  ): Promise<string> => {
     const timestamp = Date.now();
     const safeName = file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '');
     const fileName = `${namePrefix}-${timestamp}-${safeName}`;
     const storageRef = ref(storage, `${folder}/${fileName}`);
 
-    // Promise with timeout to prevent infinite hangs
-    const timeoutMs = file.size > 5 * 1024 * 1024 ? 120000 : 45000; // Larger files get more time
-    const timeoutPromise = new Promise<string>((_, reject) =>
-      setTimeout(() => reject(new Error(`Upload timed out after ${timeoutMs / 1000}s for "${file.name}"`)), timeoutMs)
-    );
+    return new Promise<string>((resolve, reject) => {
+      const task = uploadBytesResumable(storageRef, file);
 
-    const uploadPromise = (async () => {
-      const snapshot = await uploadBytes(storageRef, file);
-      return getDownloadURL(snapshot.ref);
-    })();
+      // Generous per-file timeout: 5 min for large files, 2 min for small ones
+      const timeoutMs = file.size > 5 * 1024 * 1024 ? 300000 : 120000;
+      const timer = setTimeout(() => {
+        task.cancel();
+        reject(new Error(`Upload timed out after ${timeoutMs / 1000}s for "${file.name}"`));
+      }, timeoutMs);
 
-    return Promise.race([uploadPromise, timeoutPromise]);
+      task.on(
+        'state_changed',
+        (snap) => {
+          const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+          onProgress?.(pct);
+        },
+        (err) => {
+          clearTimeout(timer);
+          reject(err);
+        },
+        async () => {
+          clearTimeout(timer);
+          try {
+            const url = await getDownloadURL(task.snapshot.ref);
+            resolve(url);
+          } catch (e) {
+            reject(e);
+          }
+        },
+      );
+    });
   };
 
   // Submit handler - save to Firebase
@@ -425,7 +449,12 @@ export default function PostPropertyPage() {
         try {
           console.log(`   Photo ${i + 1}/${photos.length}: ${photos[i].name} (${(photos[i].size / 1024).toFixed(0)} KB)`);
           setSubmitProgress(`Uploading photo ${i + 1} of ${photos.length}...`);
-          const url = await uploadFile(photos[i], `properties/${user.uid}/photos`, `photo-${i}`);
+          const url = await uploadFile(
+            photos[i],
+            `properties/${user.uid}/photos`,
+            `photo-${i}`,
+            (pct) => setSubmitProgress(`Uploading photo ${i + 1} of ${photos.length}... ${pct}%`),
+          );
           photoUrls.push(url);
           console.log(`   ✔ Photo ${i + 1} uploaded`);
         } catch (uploadErr: any) {
@@ -450,7 +479,12 @@ export default function PostPropertyPage() {
           try {
             console.log(`   Video ${i + 1}/${videos.length}: ${videos[i].name} (${(videos[i].size / (1024 * 1024)).toFixed(1)} MB)`);
             setSubmitProgress(`Uploading video ${i + 1} of ${videos.length}...`);
-            const url = await uploadFile(videos[i], `properties/${user.uid}/videos`, `video-${i}`);
+            const url = await uploadFile(
+              videos[i],
+              `properties/${user.uid}/videos`,
+              `video-${i}`,
+              (pct) => setSubmitProgress(`Uploading video ${i + 1} of ${videos.length}... ${pct}%`),
+            );
             videoUrls.push(url);
             console.log(`   ✔ Video ${i + 1} uploaded`);
           } catch (uploadErr: any) {
@@ -466,7 +500,12 @@ export default function PostPropertyPage() {
         console.log('🎤 Uploading voice over...');
         setSubmitProgress('Uploading voice over...');
         try {
-          voiceOverUrl = await uploadFile(voiceOver, `properties/${user.uid}/audio`, 'voiceover');
+          voiceOverUrl = await uploadFile(
+            voiceOver,
+            `properties/${user.uid}/audio`,
+            'voiceover',
+            (pct) => setSubmitProgress(`Uploading voice over... ${pct}%`),
+          );
           console.log('✅ Voice over uploaded');
         } catch (uploadErr: any) {
           console.warn('   ⚠ Skipping voice over:', uploadErr?.message || uploadErr);

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ProjectDetail from '@/components/ProjectDetail';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 type MediaItem = {
@@ -627,9 +627,14 @@ function firestoreDocToProject(docId: string, data: Record<string, any>, startId
     locationHighlights: data.connectivityHighlights || data.locationHighlights || [],
     configurations: Array.isArray(data.configurations) ? data.configurations : (data.bedrooms ? [`${data.bedrooms} BHK`] : []),
     amenities: Array.isArray(data.amenities) ? data.amenities : [],
-    mediaGallery: data.mediaGallery?.length ? data.mediaGallery : photos.map((url: string, i: number) => ({
-      id: i + 1, type: 'image' as const, url, caption: `Photo ${i + 1}`,
-    })),
+    mediaGallery: data.mediaGallery?.length ? data.mediaGallery : [
+      ...photos.map((url: string, i: number) => ({
+        id: i + 1, type: 'image' as const, url, caption: `Photo ${i + 1}`,
+      })),
+      ...(Array.isArray(data.videos) ? data.videos : []).map((url: string, i: number) => ({
+        id: photos.length + i + 1, type: 'video' as const, url, caption: `Video ${i + 1}`,
+      })),
+    ],
   };
 }
 
@@ -659,11 +664,17 @@ function ProjectsContent() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const q = query(collection(db, 'properties'), orderBy('createdAt', 'desc'));
+        const q = query(collection(db, 'properties'));
         const snapshot = await getDocs(q);
-        const fetched: Project[] = snapshot.docs.map((doc, i) =>
-          firestoreDocToProject(doc.id, doc.data() as Record<string, any>, 10000 + i)
-        );
+        const fetched: Project[] = snapshot.docs
+          .sort((a, b) => {
+            const aTime = a.data().createdAt?.toMillis?.() ?? 0;
+            const bTime = b.data().createdAt?.toMillis?.() ?? 0;
+            return bTime - aTime;
+          })
+          .map((doc, i) =>
+            firestoreDocToProject(doc.id, doc.data() as Record<string, any>, 10000 + i)
+          );
         setFirestoreProjects(fetched);
       } catch (err) {
         console.error('Failed to fetch from Firestore:', err);

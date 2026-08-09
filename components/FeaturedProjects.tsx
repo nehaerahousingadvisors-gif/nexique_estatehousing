@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import ProjectDetail from './ProjectDetail';
-import { collection, getDocs, orderBy, query, limit } from 'firebase/firestore';
+import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 // Static dummy data - replace with dynamic data later
@@ -162,7 +162,10 @@ const projects = [
 
 const categories = ['All', 'Residential', 'Commercial', 'Plots'];
 
-type FProject = typeof projects[0] & { firestoreId?: string };
+type FProject = typeof projects[0] & {
+  firestoreId?: string;
+  mediaGallery?: { id: number; type: 'image' | 'video'; url: string; thumbnail?: string; caption?: string }[];
+};
 
 function firestoreDocToFProject(docId: string, data: Record<string, any>, startId: number): FProject {
   const photos: string[] = data.photos || [];
@@ -214,6 +217,14 @@ function firestoreDocToFProject(docId: string, data: Record<string, any>, startI
     locationHighlights: data.connectivityHighlights || data.locationHighlights || [],
     configurations: Array.isArray(data.configurations) ? data.configurations : (data.bedrooms ? [`${data.bedrooms} BHK`] : []),
     amenities: Array.isArray(data.amenities) ? data.amenities : [],
+    mediaGallery: data.mediaGallery?.length ? data.mediaGallery : [
+      ...photos.map((url: string, i: number) => ({
+        id: i + 1, type: 'image' as const, url, caption: `Photo ${i + 1}`,
+      })),
+      ...(Array.isArray(data.videos) ? data.videos : []).map((url: string, i: number) => ({
+        id: photos.length + i + 1, type: 'video' as const, url, caption: `Video ${i + 1}`,
+      })),
+    ],
   };
 }
 
@@ -225,11 +236,18 @@ export default function FeaturedProjects() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const q = query(collection(db, 'properties'), orderBy('createdAt', 'desc'), limit(8));
+        const q = query(collection(db, 'properties'));
         const snapshot = await getDocs(q);
-        const fetched: FProject[] = snapshot.docs.map((doc, i) =>
-          firestoreDocToFProject(doc.id, doc.data() as Record<string, any>, 10000 + i)
-        );
+        const fetched: FProject[] = snapshot.docs
+          .sort((a, b) => {
+            const aTime = a.data().createdAt?.toMillis?.() ?? 0;
+            const bTime = b.data().createdAt?.toMillis?.() ?? 0;
+            return bTime - aTime;
+          })
+          .slice(0, 8)
+          .map((doc, i) =>
+            firestoreDocToFProject(doc.id, doc.data() as Record<string, any>, 10000 + i)
+          );
         setFirestoreProjects(fetched);
       } catch (err) {
         console.error('FeaturedProjects: Firestore fetch failed:', err);
