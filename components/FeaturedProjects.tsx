@@ -339,12 +339,21 @@ export default function FeaturedProjects() {
                     <p className="text-[10px] md:text-xs uppercase tracking-wider text-slate-400">Starting at</p>
                     <p className="text-sm md:text-base font-bold text-slate-900">{project.price}</p>
                   </div>
-                  <button className="flex items-center gap-1 px-3 py-1.5 md:px-4 md:py-2 bg-slate-900 hover:bg-emerald-700 text-white rounded-full font-medium transition-colors text-xs md:text-sm">
-                    View
-                    <svg className="w-2.5 h-2.5 md:w-3 md:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  <a
+                    href={`https://wa.me/919667394175?text=${encodeURIComponent(`Hi, I'm interested in ${project.name} at ${project.location}. Please share more details.`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={e => e.stopPropagation()}
+                    className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full transition-colors"
+                    style={{ backgroundColor: '#25D366' }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#1ebe5d')}
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#25D366')}
+                    title="Chat on WhatsApp"
+                  >
+                    <svg className="w-5 h-5 md:w-5 md:h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.476-.884-.785-1.48-1.75-1.653-2.047-.173-.298-.018-.46.13-.608.135-.135.298-.347.446-.52.149-.173.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.488-.5-.67-.51-.172-.01-.371-.015-.57-.015-.198 0-.52.074-.792.371-.27.296-1.029 1.008-1.029 2.455 0 1.447 1.054 2.848 1.2 3.045.149.198 2.096 3.2 5.077 4.487.712.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.041-1.37l-.36-.213-3.641.96 1.01-3.549-.235-.374a9.86 9.86 0 01-1.54-5.215c-.024-5.45 4.44-9.885 9.901-9.885 2.64 0 5.122 1.03 6.982 2.892a9.825 9.825 0 012.88 6.978c0 5.459-4.44 9.89-9.883 9.89z"/>
                     </svg>
-                  </button>
+                  </a>
                 </div>
               </div>
             </div>
