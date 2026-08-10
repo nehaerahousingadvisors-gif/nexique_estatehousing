@@ -403,6 +403,96 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
                 <li key={index} className="text-slate-600">{highlight}</li>
               ))}
             </ul>
+
+            {/* Chat / Call / Share buttons */}
+            <div className="flex flex-wrap gap-3 mt-8">
+              <a
+                href={`https://wa.me/919667394175?text=${encodeURIComponent(`Hi, I'm interested in ${project.name} at ${project.location}. Please share more details.`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
+                style={{ backgroundColor: '#1a2744' }}
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                </svg>
+                Chat
+              </a>
+              <a
+                href="tel:+919667394175"
+                className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all border-2 hover:bg-slate-50"
+                style={{ borderColor: '#1a2744', color: '#1a2744' }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                Call
+              </a>
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({ title: project.name, text: `Check out ${project.name} at ${project.location}`, url: window.location.href });
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Link copied to clipboard!');
+                  }
+                }}
+                className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all border-2 hover:bg-gray-50"
+                style={{ borderColor: '#e2e8f0', color: '#1e293b' }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                Share
+              </button>
+            </div>
+
+            {/* Listed By / Owner Section */}
+            {((project as any).owner?.name || (project as any).owner?.contact) && (
+              <div className="mt-8 pt-8 border-t border-slate-200">
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-5">Listed By</p>
+
+                {/* Avatar + Name + Role */}
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 text-xl font-bold text-slate-600"
+                    style={{ backgroundColor: '#EEF0F5' }}>
+                    {((project as any).owner?.name as string)?.[0]?.toUpperCase() ?? 'O'}
+                  </div>
+                  <div>
+                    <p className="text-base font-bold text-slate-900">{(project as any).owner.name}</p>
+                    <p className="text-sm text-slate-400">Owner</p>
+                  </div>
+                </div>
+
+                {/* Location */}
+                <div className="flex items-center gap-2 mb-3 text-slate-500 text-sm">
+                  <svg className="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{project.location}</span>
+                </div>
+
+                {/* Listed date */}
+                <div className="flex items-center gap-2 mb-6 text-slate-500 text-sm">
+                  <svg className="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>Listed on {new Date().toLocaleDateString('en-GB')}</span>
+                </div>
+
+                {/* Chat button */}
+                <a
+                  href={`https://wa.me/919667394175?text=${encodeURIComponent(`Hi, I'm interested in ${project.name} at ${project.location}. Please share more details.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
+                  style={{ backgroundColor: '#1a2744' }}
+                >
+                  Chat
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Photos & Videos Section */}

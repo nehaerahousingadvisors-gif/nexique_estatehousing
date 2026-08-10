@@ -569,6 +569,11 @@ export default function PostPropertyPage() {
         maintenanceUnit,
         bookingAmount,
         bookingUnit,
+        owner: {
+          name: ownerName.trim(),
+          contact: ownerContact.trim(),
+          email: ownerEmail.trim(),
+        },
         price: expectedPrice ? `₹${Number(expectedPrice).toLocaleString('en-IN')}` : '',
         // Meta
         name: projectName || `${selectedType || 'Property'} in ${locality || city}`,
@@ -697,6 +702,9 @@ export default function PostPropertyPage() {
   const [maintenanceUnit, setMaintenanceUnit] = useState<MaintenanceUnit>('Monthly');
   const [bookingAmount, setBookingAmount] = useState('');
   const [bookingUnit, setBookingUnit] = useState<BookingUnit>('Fixed');
+  const [ownerName, setOwnerName] = useState('');
+  const [ownerContact, setOwnerContact] = useState('');
+  const [ownerEmail, setOwnerEmail] = useState('');
   const [showStep5Errors, setShowStep5Errors] = useState(false);
 
   const score = currentStep === 5 ? 100 : currentStep === 4 ? 80 : currentStep === 3 ? 60 : currentStep === 2 ? 45 : selectedType ? 32 : lookingTo ? 16 : 13;
@@ -1398,6 +1406,54 @@ export default function PostPropertyPage() {
                         {opt}
                       </button>
                     ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Owner Details */}
+              <div className="mb-8 pb-8 border-b border-gray-100">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-lg font-bold text-slate-800">Owner</h3>
+                  <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Optional</span>
+                </div>
+                <p className="text-xs text-gray-400 mb-5">Add owner details so buyers can contact directly.</p>
+                <div className="space-y-4">
+                  {/* Owner Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Name</label>
+                    <input
+                      type="text"
+                      value={ownerName}
+                      onChange={e => setOwnerName(e.target.value)}
+                      placeholder="Owner Name"
+                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-slate-800 outline-none transition-colors focus:border-[#1a2744]"
+                    />
+                  </div>
+                  {/* Contact */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                      <span className="mr-1">📞</span>Contact
+                    </label>
+                    <input
+                      type="tel"
+                      value={ownerContact}
+                      onChange={e => setOwnerContact(e.target.value)}
+                      placeholder="Contact Number"
+                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-slate-800 outline-none transition-colors focus:border-[#1a2744]"
+                    />
+                  </div>
+                  {/* Email */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                      <span className="mr-1">✉</span>Email
+                    </label>
+                    <input
+                      type="email"
+                      value={ownerEmail}
+                      onChange={e => setOwnerEmail(e.target.value)}
+                      placeholder="Email ID"
+                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-slate-800 outline-none transition-colors focus:border-[#1a2744]"
+                    />
                   </div>
                 </div>
               </div>
