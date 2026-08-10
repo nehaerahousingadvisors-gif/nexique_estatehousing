@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AboutSection from './AboutSection';
 import ServicesSection from './ServicesSection';
 
@@ -12,6 +12,7 @@ const GREEN = '#166534';
 
 export default function AssetManagementPage() {
   const benefitsRef = useRef<HTMLElement>(null);
+  const [selectedPlan, setSelectedPlan] = useState<number>(1);
 
   useEffect(() => {
     const container = benefitsRef.current;
@@ -720,8 +721,277 @@ export default function AssetManagementPage() {
         </div>
       </section>
 
+      {/* ── Pricing Plans ────────────────────────────────────────────────── */}
+      <section className="w-full py-14 md:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 md:mb-14">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-0.5 w-20 md:w-28" style={{ backgroundColor: GOLD }} />
+              <svg className="w-5 h-5 md:w-6 md:h-6" fill={GOLD} viewBox="0 0 24 24">
+                <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" />
+              </svg>
+              <div className="h-0.5 w-20 md:w-28" style={{ backgroundColor: GOLD }} />
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-3" style={{ color: NAVY }}>
+              OUR PROPERTY
+            </h2>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-5" style={{ color: GOLD }}>
+              ASSET MANAGEMENT PLANS
+            </h2>
+            <p className="text-gray-500 text-base md:text-lg max-w-2xl mx-auto">
+              Choose the perfect plan for seamless property management<br />
+              and maximum returns.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-7">
+            {[
+              {
+                name: 'Monthly Plan',
+                price: '₹24,999',
+                popular: false,
+                icon: (
+                  <svg className="w-10 h-10 md:w-12 md:h-12" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                    <rect x="3" y="5" width="18" height="16" rx="2" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M8 3v4M16 3v4M8 14h3M13 14h3M8 18h3M13 18h3" />
+                  </svg>
+                ),
+                features: [
+                  'Property Maintenance',
+                  'Tenant Management',
+                  'Rent Collection',
+                  'Financial Reporting',
+                  '24/7 Support',
+                ],
+              },
+              {
+                name: 'Quarterly Plan',
+                price: '₹79,990',
+                popular: true,
+                icon: (
+                  <svg className="w-10 h-10 md:w-12 md:h-12" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                    <rect x="3" y="5" width="18" height="16" rx="2" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M8 3v4M16 3v4M7 14h.01M10 14h.01M13 14h.01M16 14h.01M7 17h.01M10 17h.01M13 17h.01M16 17h.01" />
+                  </svg>
+                ),
+                features: [
+                  'Property Maintenance',
+                  'Tenant Management',
+                  'Rent Collection',
+                  'Financial Reporting',
+                  '24/7 Support',
+                ],
+              },
+              {
+                name: 'Half-Yearly Plan',
+                price: '₹1,10,000',
+                popular: false,
+                icon: (
+                  <svg className="w-10 h-10 md:w-12 md:h-12" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                    <rect x="3" y="5" width="18" height="16" rx="2" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M8 3v4M16 3v4M7 14h2M11 14h2M15 14h2M7 17h2M11 17h2M15 17h2" />
+                  </svg>
+                ),
+                features: [
+                  'Property Maintenance',
+                  'Tenant Management',
+                  'Rent Collection',
+                  'Financial Reporting',
+                  '24/7 Support',
+                ],
+              },
+              {
+                name: 'Yearly Plan',
+                price: '₹1,99,000',
+                popular: false,
+                icon: (
+                  <svg className="w-10 h-10 md:w-12 md:h-12" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                    <rect x="3" y="5" width="18" height="16" rx="2" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M8 3v4M16 3v4" />
+                    <circle cx="16.5" cy="15.5" r="2.5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 14v2l1.5 1M7 14h2M10 14h2M7 17h2M10 17h2" />
+                  </svg>
+                ),
+                features: [
+                  'Property Maintenance',
+                  'Tenant Management',
+                  'Rent Collection',
+                  'Financial Reporting',
+                  '24/7 Support',
+                ],
+              },
+            ].map((plan, idx) => {
+              const isSelected = selectedPlan === idx;
+              return (
+              <div
+                key={idx}
+                onClick={() => setSelectedPlan(idx)}
+                className={`relative bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 md:p-7 flex flex-col cursor-pointer ${
+                  isSelected
+                    ? 'ring-4 ring-offset-4 transform scale-[1.02]'
+                    : plan.popular
+                    ? 'ring-2 md:ring-3 ring-offset-2'
+                    : 'border border-slate-100 hover:border-slate-200'
+                }`}
+                style={
+                  isSelected
+                    ? { boxShadow: `0 0 0 4px ${GOLD}, 0 25px 50px -12px rgba(26,39,68,0.25)`, transform: 'scale(1.02)' }
+                    : plan.popular
+                    ? { boxShadow: `0 0 0 2px ${GOLD}, 0 20px 40px -10px rgba(26,39,68,0.15)` }
+                    : {}
+                }
+              >
+                {plan.popular && (
+                  <div
+                    className="absolute -top-0 -right-0 overflow-hidden w-32 h-32 rounded-tr-3xl pointer-events-none"
+                    style={{}}
+                  >
+                    <div
+                      className="absolute text-white text-xs font-bold uppercase tracking-wider py-1.5 shadow-md"
+                      style={{
+                        backgroundColor: GOLD,
+                        transform: 'rotate(45deg)',
+                        top: '18px',
+                        right: '-28px',
+                        width: '140px',
+                        textAlign: 'center',
+                        letterSpacing: '0.1em',
+                      }}
+                    >
+                      ✦ POPULAR
+                    </div>
+                  </div>
+                )}
+
+                <div className="absolute top-3 right-3 md:top-4 md:right-4">
+                  <div
+                    className={`w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center transition-all duration-300 border-2 ${
+                      isSelected ? 'border-transparent' : ''
+                    }`}
+                    style={{
+                      backgroundColor: isSelected ? GOLD : 'transparent',
+                      borderColor: isSelected ? GOLD : '#cbd5e1',
+                    }}
+                  >
+                    {isSelected && (
+                      <svg
+                        className="w-2.5 h-2.5 md:w-3 md:h-3 text-white"
+                        fill="none"
+                        stroke="white"
+                        strokeWidth={4}
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center text-center mb-5">
+                  <div
+                    className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center mb-4 shadow-md transition-all duration-300"
+                    style={{
+                      backgroundColor: isSelected ? GOLD : NAVY,
+                      boxShadow: isSelected ? `0 0 0 3px ${GOLD}40` : undefined,
+                    }}
+                  >
+                    {plan.icon}
+                  </div>
+                  <h3
+                    className="text-lg md:text-xl font-bold mb-3"
+                    style={{ color: NAVY }}
+                  >
+                    {plan.name}
+                  </h3>
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <div className="h-px w-12" style={{ backgroundColor: GOLD }} />
+                    <svg className="w-3.5 h-3.5" fill={GOLD} viewBox="0 0 24 24">
+                      <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" />
+                    </svg>
+                    <div className="h-px w-12" style={{ backgroundColor: GOLD }} />
+                  </div>
+                  <div
+                    className="text-3xl md:text-4xl font-extrabold mt-3 transition-all duration-300"
+                    style={{ color: isSelected ? NAVY : GOLD }}
+                  >
+                    {plan.price}
+                  </div>
+                </div>
+
+                <div
+                  className="border-t border-dashed mb-5 pt-5"
+                  style={{ borderColor: `${GOLD}50` }}
+                >
+                  <ul className="space-y-3">
+                    {plan.features.map((feature, fidx) => (
+                      <li key={fidx} className="flex items-start gap-3">
+                        <div
+                          className="w-5 h-5 md:w-5 md:h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                          style={{ backgroundColor: GOLD }}
+                        >
+                          <svg
+                            className="w-2.5 h-2.5 md:w-3 md:h-3 text-white"
+                            fill="none"
+                            stroke="white"
+                            strokeWidth={3.5}
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span
+                          className="text-sm md:text-base font-medium leading-snug"
+                          style={{ color: NAVY }}
+                        >
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="mt-auto pt-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedPlan(idx);
+                    }}
+                    className={`w-full py-3 md:py-3.5 rounded-xl font-bold text-sm md:text-base transition-all duration-300 ${
+                      isSelected || plan.popular
+                        ? 'text-white hover:opacity-90'
+                        : 'border-2 hover:bg-opacity-5'
+                    }`}
+                    style={
+                      isSelected
+                        ? { backgroundColor: NAVY, color: 'white' }
+                        : plan.popular
+                        ? { backgroundColor: GOLD, color: NAVY }
+                        : { borderColor: GOLD, color: NAVY }
+                    }
+                  >
+                    {isSelected ? '✓ SELECTED' : 'CHOOSE PLAN'}
+                  </button>
+                </div>
+              </div>
+            );
+            })}
+          </div>
+
+          <div className="mt-12 flex justify-center">
+            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full border border-slate-200 bg-white shadow-sm">
+              <svg className="w-5 h-5" fill={GOLD} viewBox="0 0 24 24">
+                <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" />
+              </svg>
+              <span className="text-sm md:text-base font-medium" style={{ color: NAVY }}>
+                Reliable Management. Maximum Returns. Complete Peace of Mind.
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA ──────────────────────────────────────────────────────────── */}
-      <section className="w-full py-14 md:py-20" style={{ backgroundColor: '#f8f9fb' }}>
+      <section className="w-full py-14 md:py-20 bg-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4" style={{ color: NAVY }}>
             Ready to Maximize Your Property Returns?
