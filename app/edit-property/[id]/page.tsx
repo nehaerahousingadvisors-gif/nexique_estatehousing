@@ -26,6 +26,9 @@ interface PropertyForm {
   imageUrl: string;
   reraNumber: string;
   area: string;
+  ownerName: string;
+  ownerEmail: string;
+  ownerContact: string;
   [key: string]: string;
 }
 
@@ -59,6 +62,9 @@ export default function EditPropertyPage() {
     imageUrl: '',
     reraNumber: '',
     area: '',
+    ownerName: '',
+    ownerEmail: '',
+    ownerContact: '',
   });
 
   // Auth check
@@ -125,6 +131,9 @@ export default function EditPropertyPage() {
           imageUrl: data.imageUrl || data.image || '',
           reraNumber: data.reraNumber || data.RERA || '',
           area: data.area || data.projectLandArea || '',
+          ownerName: data.owner?.name || '',
+          ownerEmail: data.owner?.email || '',
+          ownerContact: data.owner?.contact || '',
         });
       } catch (err) {
         console.error('Error loading property:', err);
@@ -186,6 +195,13 @@ export default function EditPropertyPage() {
           .map((s) => s.trim())
           .filter(Boolean);
       }
+
+      // Update owner object (preserve existing owner fields)
+      updateData.owner = {
+        name: formData.ownerName || '',
+        email: formData.ownerEmail || '',
+        contact: formData.ownerContact || '',
+      };
 
       await updateDoc(doc(db, sourceCollection, propertyId), updateData);
 
@@ -445,7 +461,53 @@ export default function EditPropertyPage() {
               </div>
             </div>
 
-            {/* Section 2: Details */}
+            {/* Section 2: Owner / Contact Info */}
+            <div className="bg-white rounded-3xl p-6 md:p-8 mb-6 border border-slate-200 shadow-sm">
+              <h2 className="text-xl font-bold text-slate-900 mb-6">Owner / Contact Info</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Owner Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Owner / Agent Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.ownerName}
+                    onChange={(e) => updateField('ownerName', e.target.value)}
+                    placeholder="e.g. nexiqueestate"
+                    className="w-full px-4 py-3.5 rounded-2xl text-sm text-slate-800 outline-none border border-slate-200 focus:border-slate-500 transition-colors bg-white"
+                  />
+                </div>
+                {/* Owner Email */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.ownerEmail}
+                    onChange={(e) => updateField('ownerEmail', e.target.value)}
+                    placeholder="e.g. info@nexiqueestate.com"
+                    className="w-full px-4 py-3.5 rounded-2xl text-sm text-slate-800 outline-none border border-slate-200 focus:border-slate-500 transition-colors bg-white"
+                  />
+                </div>
+                {/* Owner Contact */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Contact Number
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.ownerContact}
+                    onChange={(e) => updateField('ownerContact', e.target.value)}
+                    placeholder="e.g. +91 96673 94175"
+                    className="w-full px-4 py-3.5 rounded-2xl text-sm text-slate-800 outline-none border border-slate-200 focus:border-slate-500 transition-colors bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: Details */}
             <div className="bg-white rounded-3xl p-6 md:p-8 mb-6 border border-slate-200 shadow-sm">
               <h2 className="text-xl font-bold text-slate-900 mb-6">Property Details</h2>
               <div className="space-y-5">
