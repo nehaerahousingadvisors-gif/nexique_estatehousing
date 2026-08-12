@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, updateDoc, collection } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
 const PRIMARY = '#1a2744';
@@ -113,24 +113,44 @@ export default function EditPropertyPage() {
 
         // Populate form fields
         const data = found as any;
+
+        // Helper: extract value from details array by label
+        const fromDetails = (label: string): string => {
+          if (!Array.isArray(data.details)) return '';
+          const item = data.details.find(
+            (d: any) => d.label?.toLowerCase() === label.toLowerCase()
+          );
+          return item?.value || '';
+        };
+
+        // Firebase se data aane ke baad console mein print karo — debugging ke liye
+        console.log('Fetched property data:', JSON.stringify(data, null, 2));
+
         setFormData({
-          name: data.name || data.title || data.projectName || '',
-          location: data.location || data.address || data.city || '',
+          // name: projectName pehle try karo, phir name, phir title
+          name: data.projectName || data.name || data.title || '',
+          location: data.projectLocation || data.location || data.address || fromDetails('location') || '',
           price: data.price || data.priceRange || data.startingPrice || '',
-          category: data.category || data.type || data.propertyType || 'Residential',
-          status: data.status || 'Ready to move',
-          developer: data.developer || data.builder || '',
-          launchYear: data.launchYear || data.launchDate || data.LaunchDate || '',
-          overview: data.overview || data.description || data.highlights || '',
-          configurations: Array.isArray(data.configurations) ? data.configurations.join(', ') : (data.configurations || ''),
-          amenities: Array.isArray(data.amenities) ? data.amenities.join(', ') : (data.amenities || ''),
+          category: data.category || data.propertyCategory || data.type || data.propertyType || 'Residential',
+          status: data.status || data.availability || fromDetails('status') || 'Ready to move',
+          developer: data.developerName || data.developer || data.builder || fromDetails('developer') || '',
+          launchYear: data.launchYear || data.launchDate || data.LaunchDate || fromDetails('launch year') || '',
+          overview: data.overview || data.propertyOverview || data.locationOverview || data.description || data.highlights || '',
+          configurations: Array.isArray(data.configurations)
+            ? data.configurations.join(', ')
+            : (data.configurations || ''),
+          amenities: Array.isArray(data.amenities)
+            ? data.amenities.join(', ')
+            : (data.amenities || ''),
           locationHighlights: Array.isArray(data.locationHighlights)
             ? data.locationHighlights.join('\n')
+            : Array.isArray(data.connectivityHighlights)
+            ? data.connectivityHighlights.join('\n')
             : (data.locationAdvantages || data.locationHighlights || ''),
-          image: data.image || data.imageUrl || data.heroImage || '',
+          image: data.image || data.imageUrl || data.heroImage || (Array.isArray(data.photos) && data.photos[0]) || '',
           imageUrl: data.imageUrl || data.image || '',
-          reraNumber: data.reraNumber || data.RERA || '',
-          area: data.area || data.projectLandArea || '',
+          reraNumber: data.reraNumber || data.RERA || fromDetails('rera number') || '',
+          area: data.landArea || data.area || data.projectLandArea || fromDetails('project land area') || '',
           ownerName: data.owner?.name || '',
           ownerEmail: data.owner?.email || '',
           ownerContact: data.owner?.contact || '',
@@ -158,58 +178,83 @@ export default function EditPropertyPage() {
     setSaveSuccess(false);
 
     try {
-      // Prepare update data - preserve arrays
-      const updateData: Record<string, any> = {};
+      // Convert comma-separated strings to arrays
+      const configurationsArr = formData.configurations
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
 
-      if (formData.name) updateData.name = formData.name;
-      if (formData.location) updateData.location = formData.location;
-      if (formData.price) updateData.price = formData.price;
-      if (formData.category) updateData.category = formData.category;
-      if (formData.status) updateData.status = formData.status;
-      if (formData.developer) updateData.developer = formData.developer;
-      if (formData.launchYear) updateData.launchYear = formData.launchYear;
-      if (formData.overview) updateData.overview = formData.overview;
-      if (formData.reraNumber) updateData.reraNumber = formData.reraNumber;
-      if (formData.area) updateData.area = formData.area;
-      if (formData.image) {
-        updateData.image = formData.image;
-        updateData.imageUrl = formData.image;
-      }
+      const amenitiesArr = formData.amenities
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
 
-      // Convert comma-separated strings back to arrays
-      if (formData.configurations) {
-        updateData.configurations = formData.configurations
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean);
-      }
-      if (formData.amenities) {
-        updateData.amenities = formData.amenities
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean);
-      }
-      if (formData.locationHighlights) {
-        updateData.locationHighlights = formData.locationHighlights
-          .split(/[,\n]/)
-          .map((s) => s.trim())
-          .filter(Boolean);
-      }
+      const locationHighlightsArr = formData.locationHighlights
+        .split(/[,\n]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
 
-      // Update owner object (preserve existing owner fields)
-      updateData.owner = {
-        name: formData.ownerName || '',
-        email: formData.ownerEmail || '',
-        contact: formData.ownerContact || '',
+      // Build details array (same structure as post-property saves)
+      const detailsArr = [
+        { label: 'Developer', value: formData.developer },
+        { label: 'Location', value: formData.location },
+        { label: 'Project Land Area', value: formData.area },
+        { label: 'RERA Number', value: formData.reraNumber },
+        { label: 'Launch Year', value: formData.launchYear },
+        { label: 'Status', value: formData.status },
+      ].filter((d) => d.value && d.value.trim() !== '');
+
+      const updateData: Record<string, any> = {
+        // Both name AND projectName update karo (post-property dono use karta hai)
+        name: formData.name,
+        projectName: formData.name,
+        location: formData.location,
+        projectLocation: formData.location,
+        price: formData.price,
+        category: formData.category,
+        propertyCategory: formData.category,
+        status: formData.status,
+        availability: formData.status,
+        developer: formData.developer,
+        developerName: formData.developer,
+        launchYear: formData.launchYear,
+        overview: formData.overview,
+        propertyOverview: formData.overview,
+        reraNumber: formData.reraNumber,
+        area: formData.area,
+        landArea: formData.area,
+        image: formData.image,
+        imageUrl: formData.image,
+        heroImage: formData.image,
+        configurations: configurationsArr,
+        amenities: amenitiesArr,
+        locationHighlights: locationHighlightsArr,
+        connectivityHighlights: locationHighlightsArr,
+        details: detailsArr,
+        owner: {
+          name: formData.ownerName,
+          email: formData.ownerEmail,
+          contact: formData.ownerContact,
+        },
       };
 
+      console.log('Saving to Firestore:', sourceCollection, propertyId, updateData);
       await updateDoc(doc(db, sourceCollection, propertyId), updateData);
+      console.log('Saved successfully!');
 
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err) {
-      console.error('Error saving:', err);
-      setError('Failed to save changes. Please try again.');
+    } catch (err: any) {
+      console.error('Error saving property:', err);
+      const msg = err?.message || 'Failed to save changes.';
+      const code = err?.code || '';
+      if (code === 'permission-denied') {
+        setError('❌ Firebase Permission Denied — Firebase Console → Firestore → Rules mein yeh set karo: allow read, write: if request.auth != null;');
+      } else if (code === 'unauthenticated') {
+        setError('❌ Not logged in — Please login again and retry.');
+      } else {
+        setError(`❌ Save failed (${code || 'unknown'}): ${msg}`);
+      }
     } finally {
       setSaving(false);
     }

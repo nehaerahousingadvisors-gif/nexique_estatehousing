@@ -38,6 +38,38 @@ const commercialTypes = [
   'Office Space', 'Retail / Shop', 'Commercial Land', 'Warehouse', 'Industrial Building', 'Other',
 ];
 
+// ─── Helper: ToggleGroup (Available / Not Available style pills) ─────────────
+interface ToggleGroupProps {
+  label: string;
+  options: string[];
+  value: string;
+  onChange: (val: string) => void;
+}
+function ToggleGroup({ label, options, value, onChange }: ToggleGroupProps) {
+  return (
+    <div className="mb-8 pb-8 border-b border-gray-100">
+      <h3 className="text-lg font-bold text-slate-800 mb-4">{label}</h3>
+      <div className="flex flex-wrap gap-3">
+        {options.map((opt) => (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => onChange(value === opt ? '' : opt)}
+            className="px-5 py-2 rounded-full border text-sm font-medium transition-colors"
+            style={{
+              borderColor: value === opt ? PRIMARY : '#d1d5db',
+              backgroundColor: value === opt ? `${PRIMARY}15` : 'white',
+              color: value === opt ? PRIMARY : '#64748b',
+            }}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Step 4: Photos, Videos & Voice-over ──────────────────────────────────────
 interface Step4MediaUploadProps {
   onBack: () => void;
@@ -533,11 +565,28 @@ export default function PostPropertyPage() {
         plotUnit,
         carpetArea,
         builtUpArea,
+        superBuiltUpArea,
         furnishing,
         coveredParking,
         openParking,
         totalFloors,
         availability,
+        // Step 3 — Commercial specific
+        ...(propertyCategory === 'Commercial' && {
+          minSeats,
+          maxSeats,
+          numCabins,
+          numMeetingRooms,
+          washroom,
+          conferenceRoom,
+          receptionArea,
+          pantryType,
+          furnishingAvail,
+          centralAC,
+          floorNo,
+          lifts,
+          commercialParking,
+        }),
         // Project Profile
         inventoryType,
         projectName: projectName || `${selectedType || 'Property'} in ${locality || city}`,
@@ -665,12 +714,29 @@ export default function PostPropertyPage() {
   const [showCarpet, setShowCarpet] = useState(false);
   const [builtUpArea, setBuiltUpArea] = useState('');
   const [showBuiltUp, setShowBuiltUp] = useState(false);
+  const [showSuperBuiltUp, setShowSuperBuiltUp] = useState(false);
+  const [superBuiltUpArea, setSuperBuiltUpArea] = useState('');
   const [furnishing, setFurnishing] = useState<Furnishing | ''>('');
   const [coveredParking, setCoveredParking] = useState(0);
   const [openParking, setOpenParking] = useState(0);
   const [totalFloors, setTotalFloors] = useState('');
   const [availability, setAvailability] = useState<AvailabilityStatus | ''>('');
   const [showStep3Errors, setShowStep3Errors] = useState(false);
+
+  // Step 3 — Commercial specific fields
+  const [minSeats, setMinSeats] = useState('');
+  const [maxSeats, setMaxSeats] = useState('');
+  const [numCabins, setNumCabins] = useState('');
+  const [numMeetingRooms, setNumMeetingRooms] = useState('');
+  const [washroom, setWashroom] = useState<'Available' | 'Not Available' | ''>('');
+  const [conferenceRoom, setConferenceRoom] = useState<'Available' | 'Not Available' | ''>('');
+  const [receptionArea, setReceptionArea] = useState<'Available' | 'Not Available' | ''>('');
+  const [pantryType, setPantryType] = useState<'Private' | 'Shared' | 'Not Available' | ''>('');
+  const [furnishingAvail, setFurnishingAvail] = useState<'Available' | 'Not Available' | ''>('');
+  const [centralAC, setCentralAC] = useState<'Available' | 'Not Available' | ''>('');
+  const [floorNo, setFloorNo] = useState('');
+  const [lifts, setLifts] = useState<'Available' | 'Not Available' | ''>('');
+  const [commercialParking, setCommercialParking] = useState<'Available' | 'Not Available' | ''>('');
 
   // Step 3 — Project Profile extras
   const [inventoryType, setInventoryType] = useState('');
@@ -710,7 +776,9 @@ export default function PostPropertyPage() {
   const score = currentStep === 5 ? 100 : currentStep === 4 ? 80 : currentStep === 3 ? 60 : currentStep === 2 ? 45 : selectedType ? 32 : lookingTo ? 16 : 13;
   const canContinueStep1 = selectedType !== '';
   const canContinueStep2 = city.trim() !== '';
-  const canContinueStep3 = availability !== '';
+  const canContinueStep3 = propertyCategory === 'Commercial'
+    ? (carpetArea !== '' && availability !== '')
+    : availability !== '';
   const step1Subtitle = selectedType ? `${selectedType} for ${lookingTo || 'Sale'}` : null;
 
   const handleContinue = () => {
@@ -932,300 +1000,614 @@ export default function PostPropertyPage() {
               </button>
               <h2 className="text-3xl font-bold text-slate-800 mb-8">Tell us about your property</h2>
 
-              {/* Add Room Details */}
-              <div className="mb-8">
-                <h3 className="text-lg font-bold text-slate-800 mb-5">Add Room Details</h3>
-                <NumSelector label="No. of Bedrooms" value={bedrooms} options={[1, 2, 3, 4]} onChange={setBedrooms} addOther />
-                <NumSelector label="No. of Bathrooms" value={bathrooms} options={[1, 2, 3, 4]} onChange={setBathrooms} addOther />
-                <div className="mb-6">
-                  <p className="text-sm font-semibold text-slate-800 mb-3">Balconies</p>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    {[0, 1, 2, 3].map((n) => (
-                      <button key={n} onClick={() => setBalconies(n)}
-                        className="px-5 py-2 rounded-full border text-sm font-medium transition-all"
-                        style={{ borderColor: balconies === n ? PRIMARY : '#d1d5db', backgroundColor: balconies === n ? `${PRIMARY}15` : 'white', color: balconies === n ? PRIMARY : '#64748b' }}>
-                        {n}
-                      </button>
-                    ))}
-                    <button className="px-5 py-2 rounded-full border text-sm font-medium border-gray-300 text-gray-600 hover:bg-gray-50">
-                      More than 3
-                    </button>
-                  </div>
-                  {showStep3Errors && balconies === null && (
-                    <p className="text-xs text-red-500 mt-2">Please specify balcony count</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Add Area Details */}
-              <div className="mb-8 pb-8 border-b border-gray-100">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-lg font-bold text-slate-800">Add Area Details</h3>
-                  <button className="w-5 h-5 rounded-full border border-gray-400 text-xs text-gray-500 flex items-center justify-center">?</button>
-                  {showStep3Errors && !plotArea && (
-                    <span className="text-red-500 text-lg">&#9888;</span>
-                  )}
-                </div>
-                {showStep3Errors && !plotArea && (
-                  <p className="text-xs text-red-500 mb-3">Atleast one area type mandatory</p>
-                )}
-                <div className="border border-gray-300 rounded-md overflow-hidden max-w-sm mb-3 flex">
-                  <input type="number" value={plotArea} onChange={(e) => setPlotArea(e.target.value)}
-                    placeholder="Plot Area"
-                    className="flex-1 px-3 py-2.5 text-sm text-slate-700 outline-none"
-                    style={{ borderRight: '1px solid #d1d5db' }} />
-                  <select value={plotUnit} onChange={(e) => setPlotUnit(e.target.value)}
-                    className="px-3 py-2.5 text-sm text-slate-700 bg-white outline-none border-0">
-                    <option>sq.ft.</option>
-                    <option>sq.m.</option>
-                    <option>sq.yd.</option>
-                    <option>acres</option>
-                  </select>
-                </div>
-                <div className="flex gap-4 flex-wrap">
-                  {!showCarpet && (
-                    <button onClick={() => setShowCarpet(true)} className="text-sm font-medium" style={{ color: PRIMARY }}>+ Carpet Area</button>
-                  )}
-                  {showCarpet && (
-                    <div className="border border-gray-300 rounded-md overflow-hidden max-w-sm flex w-full sm:w-auto">
-                      <input type="number" value={carpetArea} onChange={(e) => setCarpetArea(e.target.value)}
+              {/* ════════════════════════════════════════════════════════
+                  COMMERCIAL PROPERTY PROFILE
+              ════════════════════════════════════════════════════════ */}
+              {propertyCategory === 'Commercial' ? (
+                <>
+                  {/* Add Area Details — Carpet Area mandatory */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-bold text-slate-800">Add Area Details</h3>
+                      <button className="w-5 h-5 rounded-full border border-gray-400 text-xs text-gray-500 flex items-center justify-center">?</button>
+                    </div>
+                    <p className="text-xs text-gray-400 mb-4">Carpet area is mandatory</p>
+                    {showStep3Errors && !carpetArea && (
+                      <p className="text-xs text-red-500 mb-3">Carpet area is required</p>
+                    )}
+                    {/* Carpet Area — required */}
+                    <div className="border border-gray-300 rounded-md overflow-hidden max-w-sm mb-3 flex">
+                      <input
+                        type="number"
+                        value={carpetArea}
+                        onChange={(e) => setCarpetArea(e.target.value)}
                         placeholder="Carpet Area"
                         className="flex-1 px-3 py-2.5 text-sm text-slate-700 outline-none"
-                        style={{ borderRight: '1px solid #d1d5db' }} />
+                        style={{ borderRight: '1px solid #d1d5db', borderColor: showStep3Errors && !carpetArea ? '#ef4444' : undefined }}
+                      />
                       <select className="px-3 py-2.5 text-sm text-slate-700 bg-white outline-none border-0">
-                        <option>sq.ft.</option><option>sq.m.</option>
+                        <option>sq.ft.</option>
+                        <option>sq.m.</option>
+                        <option>sq.yd.</option>
                       </select>
                     </div>
-                  )}
-                  {!showBuiltUp && (
-                    <button onClick={() => setShowBuiltUp(true)} className="text-sm font-medium" style={{ color: PRIMARY }}>+ Built-up Area</button>
-                  )}
-                  {showBuiltUp && (
-                    <div className="border border-gray-300 rounded-md overflow-hidden max-w-sm flex w-full sm:w-auto">
-                      <input type="number" value={builtUpArea} onChange={(e) => setBuiltUpArea(e.target.value)}
-                        placeholder="Built-up Area"
+                    {/* Super Built-up Area — optional toggle */}
+                    {!showSuperBuiltUp ? (
+                      <button onClick={() => setShowSuperBuiltUp(true)} className="text-sm font-medium" style={{ color: PRIMARY }}>
+                        + Super Built-up Area
+                      </button>
+                    ) : (
+                      <div className="border border-gray-300 rounded-md overflow-hidden max-w-sm flex">
+                        <input
+                          type="number"
+                          value={superBuiltUpArea}
+                          onChange={(e) => setSuperBuiltUpArea(e.target.value)}
+                          placeholder="Super Built-up Area"
+                          className="flex-1 px-3 py-2.5 text-sm text-slate-700 outline-none"
+                          style={{ borderRight: '1px solid #d1d5db' }}
+                        />
+                        <select className="px-3 py-2.5 text-sm text-slate-700 bg-white outline-none border-0">
+                          <option>sq.ft.</option>
+                          <option>sq.m.</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Describe your office setup */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4">Describe your office setup</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                      <div className="border border-gray-300 rounded-md">
+                        <input
+                          type="number"
+                          value={minSeats}
+                          onChange={(e) => setMinSeats(e.target.value)}
+                          placeholder="Mini. no. of Seats"
+                          className="w-full px-3 py-3 text-sm text-slate-700 outline-none bg-white rounded-md"
+                        />
+                      </div>
+                      <div className="border border-gray-300 rounded-md">
+                        <input
+                          type="number"
+                          value={maxSeats}
+                          onChange={(e) => setMaxSeats(e.target.value)}
+                          placeholder="Max. no. of Seats (optional)"
+                          className="w-full px-3 py-3 text-sm text-slate-700 outline-none bg-white rounded-md"
+                        />
+                      </div>
+                    </div>
+                    <div className="border border-gray-300 rounded-md max-w-xs">
+                      <input
+                        type="number"
+                        value={numCabins}
+                        onChange={(e) => setNumCabins(e.target.value)}
+                        placeholder="No. of Cabins"
+                        className="w-full px-3 py-3 text-sm text-slate-700 outline-none bg-white rounded-md"
+                      />
+                    </div>
+                  </div>
+
+                  {/* No. of Meeting Rooms */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4">No. of Meeting Rooms</h3>
+                    <div className="border border-gray-300 rounded-md max-w-xs">
+                      <input
+                        type="number"
+                        value={numMeetingRooms}
+                        onChange={(e) => setNumMeetingRooms(e.target.value)}
+                        placeholder="No. of Meeting Rooms"
+                        className="w-full px-3 py-3 text-sm text-slate-700 outline-none bg-white rounded-md"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Washrooms */}
+                  <ToggleGroup label="Washrooms" options={['Available', 'Not Available']} value={washroom} onChange={(v) => setWashroom(v as typeof washroom)} />
+
+                  {/* Conference Room */}
+                  <ToggleGroup label="Conference Room" options={['Available', 'Not Available']} value={conferenceRoom} onChange={(v) => setConferenceRoom(v as typeof conferenceRoom)} />
+
+                  {/* Reception Area */}
+                  <ToggleGroup label="Reception Area" options={['Available', 'Not Available']} value={receptionArea} onChange={(v) => setReceptionArea(v as typeof receptionArea)} />
+
+                  {/* Pantry Type */}
+                  <ToggleGroup label="Pantry Type" options={['Private', 'Shared', 'Not Available']} value={pantryType} onChange={(v) => setPantryType(v as typeof pantryType)} />
+
+                  {/* Facilities — Furnishing & Central AC */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4">Please select the facilities available</h3>
+                    {[
+                      { label: 'Furnishing', value: furnishingAvail, set: setFurnishingAvail },
+                      { label: 'Central Air Conditioning', value: centralAC, set: setCentralAC },
+                    ].map(({ label, value, set }) => (
+                      <div key={label} className="flex items-center justify-between mb-3">
+                        <span className="text-sm text-slate-700">{label}</span>
+                        <div className="flex items-center gap-4">
+                          {(['Available', 'Not Available'] as const).map((opt) => (
+                            <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
+                              <div
+                                onClick={() => set(value === opt ? '' : opt as any)}
+                                className="w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0"
+                                style={{
+                                  borderColor: value === opt ? PRIMARY : '#d1d5db',
+                                  backgroundColor: value === opt ? PRIMARY : 'white',
+                                }}
+                              >
+                                {value === opt && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                              </div>
+                              <span className="text-sm text-slate-600">{opt}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Floor Details */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-1">Floor Details</h3>
+                    <p className="text-sm text-gray-400 mb-4">Enter the total number of floors and select the floors your office space occupies</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
+                      <div className="border border-gray-300 rounded-md">
+                        <input
+                          type="number"
+                          value={totalFloors}
+                          onChange={(e) => setTotalFloors(e.target.value)}
+                          placeholder="Total Floors"
+                          className="w-full px-3 py-3 text-sm text-slate-700 outline-none bg-white rounded-md"
+                        />
+                      </div>
+                      <select
+                        value={floorNo}
+                        onChange={(e) => setFloorNo(e.target.value)}
+                        className="border border-gray-300 rounded-md px-3 py-3 text-sm text-slate-700 bg-white outline-none"
+                      >
+                        <option value="">Your Floor No. (optional)</option>
+                        {['Ground', 'Lower Basement', 'Upper Basement',
+                          ...[...Array(30)].map((_, i) => `${i + 1}`)
+                        ].map((f) => (
+                          <option key={f} value={f}>{f}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Lifts */}
+                  <ToggleGroup label="Lifts" options={['Available', 'Not Available']} value={lifts} onChange={(v) => setLifts(v as typeof lifts)} />
+
+                  {/* Parking */}
+                  <ToggleGroup label="Parking" options={['Available', 'Not Available']} value={commercialParking} onChange={(v) => setCommercialParking(v as typeof commercialParking)} />
+
+                  {/* Availability Status */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <div className="flex items-center gap-2 mb-3">
+                      <h3 className="text-lg font-bold text-slate-800">Availability Status</h3>
+                      {showStep3Errors && !availability && (
+                        <span className="w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">!</span>
+                      )}
+                    </div>
+                    {showStep3Errors && !availability && (
+                      <p className="text-xs text-red-500 mb-3">Please select the availability status</p>
+                    )}
+                    <div className="flex flex-wrap gap-3">
+                      {(['Ready to move', 'Under construction'] as AvailabilityStatus[]).map((s) => (
+                        <button key={s} onClick={() => setAvailability(s)}
+                          className="px-5 py-2 rounded-full border text-sm font-medium transition-colors"
+                          style={{ borderColor: availability === s ? PRIMARY : '#d1d5db', backgroundColor: availability === s ? `${PRIMARY}15` : 'white', color: availability === s ? PRIMARY : '#64748b' }}>
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Overview */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-1">Overview</h3>
+                    <p className="text-xs text-gray-400 mb-3">Describe your commercial space — highlight key features, unique selling points, etc.</p>
+                    <textarea
+                      value={propertyOverview}
+                      onChange={e => setPropertyOverview(e.target.value)}
+                      placeholder="e.g. A premium office space available in Sector 62, Noida with modern facilities and excellent connectivity..."
+                      rows={4}
+                      className="w-full px-3 py-2.5 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors resize-none"
+                      style={{ borderColor: propertyOverview ? PRIMARY : '#d1d5db', borderWidth: propertyOverview ? '2px' : '1px' }}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">{propertyOverview.length} characters</p>
+                  </div>
+
+                  {/* Project Overview */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4">Project Overview</h3>
+                    <div className="space-y-3">
+                      {[
+                        { label: 'Project Name', value: projectName, set: setProjectName, placeholder: 'e.g. World Trade Tower' },
+                        { label: 'Developer', value: developerName, set: setDeveloperName, placeholder: 'e.g. ABC Developers' },
+                        { label: 'Location', value: projectLocation, set: setProjectLocation, placeholder: 'e.g. Sector 16, Noida' },
+                        { label: 'Total Floors', value: totalTowers, set: setTotalTowers, placeholder: 'e.g. 28 Floors' },
+                        { label: 'RERA Number', value: reraNumber, set: setReraNumber, placeholder: 'e.g. UPRERAPRJ123456/2024' },
+                      ].map(({ label, value, set, placeholder }) => (
+                        <div key={label} className="grid grid-cols-2 gap-3 items-center border-b border-gray-50 pb-2">
+                          <span className="text-sm font-semibold text-slate-700">{label}</span>
+                          <input
+                            type="text"
+                            value={value}
+                            onChange={e => set(e.target.value)}
+                            placeholder={placeholder}
+                            className="px-3 py-2 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors"
+                            style={{ borderColor: value ? PRIMARY : '#d1d5db' }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Amenities — commercial */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4">Amenities</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {[
+                        'Power Back-up', '24x7 Security', 'CCTV', 'Lift',
+                        'Visitor Parking', 'EV Charging', 'Fire Safety', 'High-speed Internet',
+                        'Cafeteria', 'ATM', 'Food Court', 'Housekeeping',
+                        'Intercom', 'Concierge', 'Air Conditioning',
+                      ].map(amenity => (
+                        <label key={amenity} className="flex items-center gap-2 cursor-pointer group">
+                          <div
+                            onClick={() => setSelectedAmenities(prev =>
+                              prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
+                            )}
+                            className="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors"
+                            style={{
+                              borderColor: selectedAmenities.includes(amenity) ? PRIMARY : '#d1d5db',
+                              backgroundColor: selectedAmenities.includes(amenity) ? PRIMARY : 'white',
+                            }}
+                          >
+                            {selectedAmenities.includes(amenity) && (
+                              <svg className="w-3 h-3" fill="none" stroke="white" strokeWidth={3} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                          <span className="text-sm text-slate-600 group-hover:text-slate-800">{amenity}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Location & Connectivity */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-1">Location & Connectivity</h3>
+                    <p className="text-xs text-gray-400 mb-3">Describe why this location is ideal for business</p>
+                    <textarea
+                      value={locationOverview}
+                      onChange={e => setLocationOverview(e.target.value)}
+                      placeholder="e.g. Located in the heart of Noida's commercial hub with easy access to metro and expressway..."
+                      rows={3}
+                      className="w-full px-3 py-2.5 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors resize-none mb-5"
+                      style={{ borderColor: locationOverview ? PRIMARY : '#d1d5db' }}
+                    />
+                    <h4 className="text-base font-bold text-slate-800 mb-3">Connectivity Highlights</h4>
+                    <div className="space-y-2">
+                      {connectivityHighlights.map((item, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className="text-gray-400 text-sm">•</span>
+                          <input
+                            type="text"
+                            value={item}
+                            onChange={e => {
+                              const updated = [...connectivityHighlights];
+                              updated[i] = e.target.value;
+                              setConnectivityHighlights(updated);
+                            }}
+                            placeholder="e.g. Metro Station - 500m"
+                            className="flex-1 px-3 py-2 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors"
+                            style={{ borderColor: item ? PRIMARY : '#d1d5db' }}
+                          />
+                          {connectivityHighlights.length > 1 && (
+                            <button onClick={() => setConnectivityHighlights(prev => prev.filter((_, idx) => idx !== i))}
+                              className="text-gray-400 hover:text-red-400 transition-colors text-sm">✕</button>
+                          )}
+                        </div>
+                      ))}
+                      <button onClick={() => setConnectivityHighlights(prev => [...prev, ''])}
+                        className="text-sm font-semibold mt-1" style={{ color: PRIMARY }}>
+                        + Add more
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* ════════════════════════════════════════════════════════
+                      RESIDENTIAL PROPERTY PROFILE
+                  ════════════════════════════════════════════════════════ */}
+
+                  {/* Add Room Details */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-bold text-slate-800 mb-5">Add Room Details</h3>
+                    <NumSelector label="No. of Bedrooms" value={bedrooms} options={[1, 2, 3, 4]} onChange={setBedrooms} addOther />
+                    <NumSelector label="No. of Bathrooms" value={bathrooms} options={[1, 2, 3, 4]} onChange={setBathrooms} addOther />
+                    <div className="mb-6">
+                      <p className="text-sm font-semibold text-slate-800 mb-3">Balconies</p>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        {[0, 1, 2, 3].map((n) => (
+                          <button key={n} onClick={() => setBalconies(n)}
+                            className="px-5 py-2 rounded-full border text-sm font-medium transition-all"
+                            style={{ borderColor: balconies === n ? PRIMARY : '#d1d5db', backgroundColor: balconies === n ? `${PRIMARY}15` : 'white', color: balconies === n ? PRIMARY : '#64748b' }}>
+                            {n}
+                          </button>
+                        ))}
+                        <button className="px-5 py-2 rounded-full border text-sm font-medium border-gray-300 text-gray-600 hover:bg-gray-50">
+                          More than 3
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Add Area Details */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-bold text-slate-800">Add Area Details</h3>
+                      <button className="w-5 h-5 rounded-full border border-gray-400 text-xs text-gray-500 flex items-center justify-center">?</button>
+                      {showStep3Errors && !plotArea && <span className="text-red-500 text-lg">&#9888;</span>}
+                    </div>
+                    {showStep3Errors && !plotArea && (
+                      <p className="text-xs text-red-500 mb-3">Atleast one area type mandatory</p>
+                    )}
+                    <div className="border border-gray-300 rounded-md overflow-hidden max-w-sm mb-3 flex">
+                      <input type="number" value={plotArea} onChange={(e) => setPlotArea(e.target.value)}
+                        placeholder="Plot Area"
                         className="flex-1 px-3 py-2.5 text-sm text-slate-700 outline-none"
                         style={{ borderRight: '1px solid #d1d5db' }} />
-                      <select className="px-3 py-2.5 text-sm text-slate-700 bg-white outline-none border-0">
-                        <option>sq.ft.</option><option>sq.m.</option>
+                      <select value={plotUnit} onChange={(e) => setPlotUnit(e.target.value)}
+                        className="px-3 py-2.5 text-sm text-slate-700 bg-white outline-none border-0">
+                        <option>sq.ft.</option>
+                        <option>sq.m.</option>
+                        <option>sq.yd.</option>
+                        <option>acres</option>
                       </select>
                     </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Furnishing */}
-              <div className="mb-8 pb-8 border-b border-gray-100">
-                <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-lg font-bold text-slate-800">Furnishing</h3>
-                  <span className="text-sm text-gray-400 italic">(Optional)</span>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  {(['Furnished', 'Semi-furnished', 'Un-furnished'] as Furnishing[]).map((f) => (
-                    <button key={f} onClick={() => setFurnishing(furnishing === f ? '' : f)}
-                      className="px-5 py-2 rounded-full border text-sm font-medium transition-colors"
-                      style={{ borderColor: furnishing === f ? PRIMARY : '#d1d5db', backgroundColor: furnishing === f ? `${PRIMARY}15` : 'white', color: furnishing === f ? PRIMARY : '#64748b' }}>
-                      {f}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Reserved Parking */}
-              <div className="mb-8 pb-8 border-b border-gray-100">
-                <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-lg font-bold text-slate-800">Reserved Parking</h3>
-                  <span className="text-sm text-gray-400 italic">(Optional)</span>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-6">
-                  <Counter label="Covered Parking" value={coveredParking} onChange={setCoveredParking} />
-                  <Counter label="Open Parking" value={openParking} onChange={setOpenParking} />
-                </div>
-              </div>
-
-              {/* Floor Details */}
-              <div className="mb-8 pb-8 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-slate-800 mb-1">Floor Details</h3>
-                <p className="text-sm text-gray-400 mb-4">Total no of floors and your floor details</p>
-                <div className="max-w-xs border border-gray-300 rounded-md">
-                  <input type="number" value={totalFloors} onChange={(e) => setTotalFloors(e.target.value)}
-                    placeholder="Total Floors"
-                    className="w-full px-3 py-3 text-sm text-slate-700 outline-none bg-white rounded-md" />
-                </div>
-              </div>
-
-              {/* Availability Status */}
-              <div className="mb-8">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-lg font-bold text-slate-800">Availability Status</h3>
-                  {showStep3Errors && !availability && (
-                    <span className="w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">!</span>
-                  )}
-                </div>
-                {showStep3Errors && !availability && (
-                  <p className="text-xs text-red-500 mb-3">Please select the availability status</p>
-                )}
-                <div className="flex flex-wrap gap-3 mt-3">
-                  {(['Ready to move', 'Under construction'] as AvailabilityStatus[]).map((s) => (
-                    <button key={s} onClick={() => setAvailability(s)}
-                      className="px-5 py-2 rounded-full border text-sm font-medium transition-colors"
-                      style={{ borderColor: availability === s ? PRIMARY : '#d1d5db', backgroundColor: availability === s ? `${PRIMARY}15` : 'white', color: availability === s ? PRIMARY : '#64748b' }}>
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* ── Property Overview ────────────────────────────────── */}
-              <div className="mb-8 pb-8 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-slate-800 mb-1">Overview</h3>
-                <p className="text-xs text-gray-400 mb-3">Describe your property — highlight key features, unique selling points, surroundings, etc.</p>
-                <textarea
-                  value={propertyOverview}
-                  onChange={e => setPropertyOverview(e.target.value)}
-                  placeholder="e.g. An exclusive luxury residence currently available in Sector 44, Noida. This premium property offers elevated views, exceptional natural light and access to world-class amenities..."
-                  rows={5}
-                  className="w-full px-3 py-2.5 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors resize-none"
-                  style={{ borderColor: propertyOverview ? PRIMARY : '#d1d5db', borderWidth: propertyOverview ? '2px' : '1px' }}
-                />
-                <p className="text-xs text-gray-400 mt-1">{propertyOverview.length} characters</p>
-              </div>
-
-              {/* ── Project Overview ─────────────────────────────────── */}
-              <div className="mb-8 pb-8 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-slate-800 mb-4">Project Overview</h3>
-                <div className="space-y-3">
-                  {[
-                    { label: 'Inventory Type', value: inventoryType, set: setInventoryType, placeholder: 'e.g. Exclusive Available Residence' },
-                    { label: 'Project Name', value: projectName, set: setProjectName, placeholder: 'e.g. Vaastu Homes' },
-                    { label: 'Developer', value: developerName, set: setDeveloperName, placeholder: 'e.g. Vaastu Builders' },
-                    { label: 'Location', value: projectLocation, set: setProjectLocation, placeholder: 'e.g. Siddharth Vihar, Ghaziabad' },
-                    { label: 'Project Land Area', value: landArea, set: setLandArea, placeholder: 'e.g. Approx. 5 Acres' },
-                    { label: 'Total Towers', value: totalTowers, set: setTotalTowers, placeholder: 'e.g. 3 Towers' },
-                    { label: 'Total Residences', value: totalResidences, set: setTotalResidences, placeholder: 'e.g. 250 Residences' },
-                    { label: 'RERA Number', value: reraNumber, set: setReraNumber, placeholder: 'e.g. UPRERAPRJ123456/2024' },
-                  ].map(({ label, value, set, placeholder }) => (
-                    <div key={label} className="grid grid-cols-2 gap-3 items-center border-b border-gray-50 pb-2">
-                      <span className="text-sm font-semibold text-slate-700">{label}</span>
-                      <input
-                        type="text"
-                        value={value}
-                        onChange={e => set(e.target.value)}
-                        placeholder={placeholder}
-                        className="px-3 py-2 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors"
-                        style={{ borderColor: value ? PRIMARY : '#d1d5db' }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* ── Configurations ───────────────────────────────────── */}
-              <div className="mb-8 pb-8 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-slate-800 mb-4">Configurations</h3>
-                <p className="text-xs text-gray-400 mb-3">Select all that apply</p>
-                <div className="flex flex-wrap gap-2">
-                  {['1 RK', '1 BHK', '2 BHK', '3 BHK', '4 BHK', '5 BHK', '5+ BHK', 'Studio', 'Villa', 'Penthouse'].map(cfg => (
-                    <button
-                      key={cfg}
-                      onClick={() => setConfigurations(prev =>
-                        prev.includes(cfg) ? prev.filter(c => c !== cfg) : [...prev, cfg]
+                    <div className="flex gap-4 flex-wrap">
+                      {!showCarpet && (
+                        <button onClick={() => setShowCarpet(true)} className="text-sm font-medium" style={{ color: PRIMARY }}>+ Carpet Area</button>
                       )}
-                      className="px-4 py-1.5 rounded-full border text-sm font-semibold transition-all"
-                      style={{
-                        borderColor: configurations.includes(cfg) ? PRIMARY : '#d1d5db',
-                        backgroundColor: configurations.includes(cfg) ? PRIMARY : 'white',
-                        color: configurations.includes(cfg) ? 'white' : '#64748b',
-                      }}
-                    >
-                      {cfg}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                      {showCarpet && (
+                        <div className="border border-gray-300 rounded-md overflow-hidden max-w-sm flex w-full sm:w-auto">
+                          <input type="number" value={carpetArea} onChange={(e) => setCarpetArea(e.target.value)}
+                            placeholder="Carpet Area"
+                            className="flex-1 px-3 py-2.5 text-sm text-slate-700 outline-none"
+                            style={{ borderRight: '1px solid #d1d5db' }} />
+                          <select className="px-3 py-2.5 text-sm text-slate-700 bg-white outline-none border-0">
+                            <option>sq.ft.</option><option>sq.m.</option>
+                          </select>
+                        </div>
+                      )}
+                      {!showBuiltUp && (
+                        <button onClick={() => setShowBuiltUp(true)} className="text-sm font-medium" style={{ color: PRIMARY }}>+ Built-up Area</button>
+                      )}
+                      {showBuiltUp && (
+                        <div className="border border-gray-300 rounded-md overflow-hidden max-w-sm flex w-full sm:w-auto">
+                          <input type="number" value={builtUpArea} onChange={(e) => setBuiltUpArea(e.target.value)}
+                            placeholder="Built-up Area"
+                            className="flex-1 px-3 py-2.5 text-sm text-slate-700 outline-none"
+                            style={{ borderRight: '1px solid #d1d5db' }} />
+                          <select className="px-3 py-2.5 text-sm text-slate-700 bg-white outline-none border-0">
+                            <option>sq.ft.</option><option>sq.m.</option>
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-              {/* ── Amenities ────────────────────────────────────────── */}
-              <div className="mb-8 pb-8 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-slate-800 mb-4">Amenities</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {[
-                    'Clubhouse & Lounge', 'Swimming Pool', 'Landscaped Gardens',
-                    'Modern Gym', 'Indoor Games', 'Kids Play Area',
-                    '24x7 Security', 'Power Back-up', 'Lift',
-                    'Intercom', 'CCTV', 'Visitor Parking',
-                    'Jogging Track', 'Yoga / Meditation', 'Multipurpose Hall',
-                    'Sports Court', 'Concierge', 'EV Charging',
-                  ].map(amenity => (
-                    <label key={amenity} className="flex items-center gap-2 cursor-pointer group">
-                      <div
-                        onClick={() => setSelectedAmenities(prev =>
-                          prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
-                        )}
-                        className="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors"
-                        style={{
-                          borderColor: selectedAmenities.includes(amenity) ? PRIMARY : '#d1d5db',
-                          backgroundColor: selectedAmenities.includes(amenity) ? PRIMARY : 'white',
-                        }}
-                      >
-                        {selectedAmenities.includes(amenity) && (
-                          <svg className="w-3 h-3" fill="none" stroke="white" strokeWidth={3} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-                      <span className="text-sm text-slate-600 group-hover:text-slate-800">{amenity}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+                  {/* Furnishing */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <div className="flex items-center gap-2 mb-4">
+                      <h3 className="text-lg font-bold text-slate-800">Furnishing</h3>
+                      <span className="text-sm text-gray-400 italic">(Optional)</span>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {(['Furnished', 'Semi-furnished', 'Un-furnished'] as Furnishing[]).map((f) => (
+                        <button key={f} onClick={() => setFurnishing(furnishing === f ? '' : f)}
+                          className="px-5 py-2 rounded-full border text-sm font-medium transition-colors"
+                          style={{ borderColor: furnishing === f ? PRIMARY : '#d1d5db', backgroundColor: furnishing === f ? `${PRIMARY}15` : 'white', color: furnishing === f ? PRIMARY : '#64748b' }}>
+                          {f}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* ── Location & Connectivity ───────────────────────────── */}
-              <div className="mb-8 pb-8 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-slate-800 mb-1">Location That Continues To Drive Demand</h3>
-                <p className="text-xs text-gray-400 mb-3">Describe why this location is desirable</p>
-                <textarea
-                  value={locationOverview}
-                  onChange={e => setLocationOverview(e.target.value)}
-                  placeholder="e.g. Siddharth Vihar, Ghaziabad has consistently remained one of the most desirable residential locations..."
-                  rows={3}
-                  className="w-full px-3 py-2.5 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors resize-none mb-5"
-                  style={{ borderColor: locationOverview ? PRIMARY : '#d1d5db' }}
-                />
+                  {/* Reserved Parking */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <div className="flex items-center gap-2 mb-4">
+                      <h3 className="text-lg font-bold text-slate-800">Reserved Parking</h3>
+                      <span className="text-sm text-gray-400 italic">(Optional)</span>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-6">
+                      <Counter label="Covered Parking" value={coveredParking} onChange={setCoveredParking} />
+                      <Counter label="Open Parking" value={openParking} onChange={setOpenParking} />
+                    </div>
+                  </div>
 
-                <h4 className="text-base font-bold text-slate-800 mb-3">Connectivity Highlights</h4>
-                <div className="space-y-2">
-                  {connectivityHighlights.map((item, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <span className="text-gray-400 text-sm">•</span>
-                      <input
-                        type="text"
-                        value={item}
-                        onChange={e => {
-                          const updated = [...connectivityHighlights];
-                          updated[i] = e.target.value;
-                          setConnectivityHighlights(updated);
-                        }}
-                        placeholder={`e.g. Metro Station - 2 KM`}
-                        className="flex-1 px-3 py-2 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors"
-                        style={{ borderColor: item ? PRIMARY : '#d1d5db' }}
-                      />
-                      {connectivityHighlights.length > 1 && (
+                  {/* Floor Details */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-1">Floor Details</h3>
+                    <p className="text-sm text-gray-400 mb-4">Total no of floors and your floor details</p>
+                    <div className="max-w-xs border border-gray-300 rounded-md">
+                      <input type="number" value={totalFloors} onChange={(e) => setTotalFloors(e.target.value)}
+                        placeholder="Total Floors"
+                        className="w-full px-3 py-3 text-sm text-slate-700 outline-none bg-white rounded-md" />
+                    </div>
+                  </div>
+
+                  {/* Availability Status */}
+                  <div className="mb-8">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-bold text-slate-800">Availability Status</h3>
+                      {showStep3Errors && !availability && (
+                        <span className="w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">!</span>
+                      )}
+                    </div>
+                    {showStep3Errors && !availability && (
+                      <p className="text-xs text-red-500 mb-3">Please select the availability status</p>
+                    )}
+                    <div className="flex flex-wrap gap-3 mt-3">
+                      {(['Ready to move', 'Under construction'] as AvailabilityStatus[]).map((s) => (
+                        <button key={s} onClick={() => setAvailability(s)}
+                          className="px-5 py-2 rounded-full border text-sm font-medium transition-colors"
+                          style={{ borderColor: availability === s ? PRIMARY : '#d1d5db', backgroundColor: availability === s ? `${PRIMARY}15` : 'white', color: availability === s ? PRIMARY : '#64748b' }}>
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Property Overview */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-1">Overview</h3>
+                    <p className="text-xs text-gray-400 mb-3">Describe your property — highlight key features, unique selling points, surroundings, etc.</p>
+                    <textarea
+                      value={propertyOverview}
+                      onChange={e => setPropertyOverview(e.target.value)}
+                      placeholder="e.g. An exclusive luxury residence currently available in Sector 44, Noida..."
+                      rows={5}
+                      className="w-full px-3 py-2.5 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors resize-none"
+                      style={{ borderColor: propertyOverview ? PRIMARY : '#d1d5db', borderWidth: propertyOverview ? '2px' : '1px' }}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">{propertyOverview.length} characters</p>
+                  </div>
+
+                  {/* Project Overview */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4">Project Overview</h3>
+                    <div className="space-y-3">
+                      {[
+                        { label: 'Inventory Type', value: inventoryType, set: setInventoryType, placeholder: 'e.g. Exclusive Available Residence' },
+                        { label: 'Project Name', value: projectName, set: setProjectName, placeholder: 'e.g. Vaastu Homes' },
+                        { label: 'Developer', value: developerName, set: setDeveloperName, placeholder: 'e.g. Vaastu Builders' },
+                        { label: 'Location', value: projectLocation, set: setProjectLocation, placeholder: 'e.g. Siddharth Vihar, Ghaziabad' },
+                        { label: 'Project Land Area', value: landArea, set: setLandArea, placeholder: 'e.g. Approx. 5 Acres' },
+                        { label: 'Total Towers', value: totalTowers, set: setTotalTowers, placeholder: 'e.g. 3 Towers' },
+                        { label: 'Total Residences', value: totalResidences, set: setTotalResidences, placeholder: 'e.g. 250 Residences' },
+                        { label: 'RERA Number', value: reraNumber, set: setReraNumber, placeholder: 'e.g. UPRERAPRJ123456/2024' },
+                      ].map(({ label, value, set, placeholder }) => (
+                        <div key={label} className="grid grid-cols-2 gap-3 items-center border-b border-gray-50 pb-2">
+                          <span className="text-sm font-semibold text-slate-700">{label}</span>
+                          <input
+                            type="text"
+                            value={value}
+                            onChange={e => set(e.target.value)}
+                            placeholder={placeholder}
+                            className="px-3 py-2 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors"
+                            style={{ borderColor: value ? PRIMARY : '#d1d5db' }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Configurations */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4">Configurations</h3>
+                    <p className="text-xs text-gray-400 mb-3">Select all that apply</p>
+                    <div className="flex flex-wrap gap-2">
+                      {['1 RK', '1 BHK', '2 BHK', '3 BHK', '4 BHK', '5 BHK', '5+ BHK', 'Studio', 'Villa', 'Penthouse'].map(cfg => (
                         <button
-                          onClick={() => setConnectivityHighlights(prev => prev.filter((_, idx) => idx !== i))}
-                          className="text-gray-400 hover:text-red-400 transition-colors text-sm"
-                        >✕</button>
-                      )}
+                          key={cfg}
+                          onClick={() => setConfigurations(prev =>
+                            prev.includes(cfg) ? prev.filter(c => c !== cfg) : [...prev, cfg]
+                          )}
+                          className="px-4 py-1.5 rounded-full border text-sm font-semibold transition-all"
+                          style={{
+                            borderColor: configurations.includes(cfg) ? PRIMARY : '#d1d5db',
+                            backgroundColor: configurations.includes(cfg) ? PRIMARY : 'white',
+                            color: configurations.includes(cfg) ? 'white' : '#64748b',
+                          }}
+                        >
+                          {cfg}
+                        </button>
+                      ))}
                     </div>
-                  ))}
-                  <button
-                    onClick={() => setConnectivityHighlights(prev => [...prev, ''])}
-                    className="text-sm font-semibold mt-1"
-                    style={{ color: PRIMARY }}
-                  >
-                    + Add more
-                  </button>
-                </div>
-              </div>
+                  </div>
+
+                  {/* Amenities */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4">Amenities</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {[
+                        'Clubhouse & Lounge', 'Swimming Pool', 'Landscaped Gardens',
+                        'Modern Gym', 'Indoor Games', 'Kids Play Area',
+                        '24x7 Security', 'Power Back-up', 'Lift',
+                        'Intercom', 'CCTV', 'Visitor Parking',
+                        'Jogging Track', 'Yoga / Meditation', 'Multipurpose Hall',
+                        'Sports Court', 'Concierge', 'EV Charging',
+                      ].map(amenity => (
+                        <label key={amenity} className="flex items-center gap-2 cursor-pointer group">
+                          <div
+                            onClick={() => setSelectedAmenities(prev =>
+                              prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
+                            )}
+                            className="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors"
+                            style={{
+                              borderColor: selectedAmenities.includes(amenity) ? PRIMARY : '#d1d5db',
+                              backgroundColor: selectedAmenities.includes(amenity) ? PRIMARY : 'white',
+                            }}
+                          >
+                            {selectedAmenities.includes(amenity) && (
+                              <svg className="w-3 h-3" fill="none" stroke="white" strokeWidth={3} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                          <span className="text-sm text-slate-600 group-hover:text-slate-800">{amenity}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Location & Connectivity */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-1">Location That Continues To Drive Demand</h3>
+                    <p className="text-xs text-gray-400 mb-3">Describe why this location is desirable</p>
+                    <textarea
+                      value={locationOverview}
+                      onChange={e => setLocationOverview(e.target.value)}
+                      placeholder="e.g. Siddharth Vihar, Ghaziabad has consistently remained one of the most desirable residential locations..."
+                      rows={3}
+                      className="w-full px-3 py-2.5 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors resize-none mb-5"
+                      style={{ borderColor: locationOverview ? PRIMARY : '#d1d5db' }}
+                    />
+                    <h4 className="text-base font-bold text-slate-800 mb-3">Connectivity Highlights</h4>
+                    <div className="space-y-2">
+                      {connectivityHighlights.map((item, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className="text-gray-400 text-sm">•</span>
+                          <input
+                            type="text"
+                            value={item}
+                            onChange={e => {
+                              const updated = [...connectivityHighlights];
+                              updated[i] = e.target.value;
+                              setConnectivityHighlights(updated);
+                            }}
+                            placeholder="e.g. Metro Station - 2 KM"
+                            className="flex-1 px-3 py-2 rounded-md border text-sm text-slate-700 outline-none bg-white transition-colors"
+                            style={{ borderColor: item ? PRIMARY : '#d1d5db' }}
+                          />
+                          {connectivityHighlights.length > 1 && (
+                            <button onClick={() => setConnectivityHighlights(prev => prev.filter((_, idx) => idx !== i))}
+                              className="text-gray-400 hover:text-red-400 transition-colors text-sm">✕</button>
+                          )}
+                        </div>
+                      ))}
+                      <button onClick={() => setConnectivityHighlights(prev => [...prev, ''])}
+                        className="text-sm font-semibold mt-1" style={{ color: PRIMARY }}>
+                        + Add more
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
 
               <button onClick={handleContinue}
                 className="px-8 py-2.5 rounded-md text-white font-semibold text-sm"

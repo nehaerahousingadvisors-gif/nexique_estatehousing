@@ -2,14 +2,47 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { collection, getDocs, query } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const NAVY = '#1a2744';
 
+interface FooterProject {
+  id: string;
+  name: string;
+}
+
 export default function Footer() {
+  const [footerProjects, setFooterProjects] = useState<FooterProject[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const fetchProjects = async () => {
+      try {
+        const snap = await getDocs(query(collection(db, 'properties')));
+        const projects: FooterProject[] = snap.docs
+          .map(doc => ({
+            id: doc.id,
+            name: (doc.data().projectName || doc.data().name || '').trim(),
+          }))
+          .filter(p => p.name !== '')
+          .sort((a, b) => a.name.localeCompare(b.name));
+        setFooterProjects(projects);
+      } catch {
+        // silently fail
+      }
+    };
+    fetchProjects();
+  }, []);
+
   return (
-    <footer className="w-full bg-white pt-8 md:pt-12 pb-6 md:pb-8 border-t border-gray-100">
+    <footer suppressHydrationWarning className="w-full bg-white pt-8 md:pt-12 pb-6 md:pb-8 border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 md:gap-8 mb-8 md:mb-12">
+
+          {/* Brand */}
           <div className="md:col-span-2 lg:col-span-1">
             <div className="flex items-center mb-3 md:mb-4">
               <Image
@@ -37,7 +70,6 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 md:w-10 md:h-10 border border-gray-300 rounded-full flex items-center justify-center transition-colors text-gray-700"
-                  style={{}}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = NAVY; (e.currentTarget as HTMLElement).style.borderColor = NAVY; (e.currentTarget as HTMLElement).style.color = 'white'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = ''; (e.currentTarget as HTMLElement).style.borderColor = '#d1d5db'; (e.currentTarget as HTMLElement).style.color = '#374151'; }}
                 >
@@ -47,6 +79,7 @@ export default function Footer() {
             </div>
           </div>
 
+          {/* Quick Links */}
           <div>
             <h3 className="font-semibold mb-3 md:mb-4 text-sm md:text-base" style={{ color: NAVY }}>QUICK LINKS</h3>
             <ul className="space-y-1.5 md:space-y-2">
@@ -66,45 +99,63 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* Projects — dynamic from Firebase */}
           <div>
             <h3 className="font-semibold mb-3 md:mb-4 text-sm md:text-base" style={{ color: NAVY }}>PROJECTS</h3>
-            <ul className="space-y-1.5 md:space-y-2">
-              {[
-                { href: '/projects/ats-knightsbridge', label: 'ATS Knightsbridge' },
-                { href: '/projects/m3m-cullinan', label: 'M3M Cullinan' },
-                { href: '/projects/m3m-jacob-and-co', label: 'M3M Jacob & Co' },
-                { href: '/projects/smartworld-elie-saab', label: 'Smartworld Elie Saab' },
-                { href: '/projects/trump-tower', label: 'Trump Tower' },
-                { href: '/projects/max-estate-128', label: 'Max Estate 128' },
-                { href: '/projects/max-estate-105', label: 'Max Estate 105' },
-                { href: '/projects/dasnac-westminster', label: 'Dasnac Westminster' },
-                { href: '/projects/gulshan-taj-residences', label: 'Gulshan Taj Residences' },
-                { href: '/projects/gulshan-dynasty', label: 'Gulshan Dynasty' },
-              ].map(({ href, label }) => (
-                <li key={href}>
-                  <Link href={href} className="text-gray-600 text-xs md:text-sm transition-colors hover:text-[#1a2744]">{label}</Link>
+            <ul className="space-y-1.5 md:space-y-2" suppressHydrationWarning>
+              {!mounted ? (
+                <li className="text-gray-400 text-xs">Loading...</li>
+              ) : footerProjects.length === 0 ? (
+                <li className="text-gray-400 text-xs">Loading...</li>
+              ) : (
+                footerProjects.slice(0, 12).map(({ id, name }) => (
+                  <li key={id}>
+                    <Link
+                      href={`/projects?id=${id}`}
+                      className="text-gray-600 text-xs md:text-sm transition-colors hover:text-[#1a2744]"
+                    >
+                      {name}
+                    </Link>
+                  </li>
+                ))
+              )}
+              {mounted && footerProjects.length > 12 && (
+                <li>
+                  <Link href="/projects" className="text-xs font-semibold" style={{ color: NAVY }}>
+                    View All →
+                  </Link>
                 </li>
-              ))}
+              )}
             </ul>
           </div>
 
+          {/* CENTRAL NOIDA — matched from Firebase by project name */}
           <div>
             <h3 className="font-semibold mb-3 md:mb-4 text-sm md:text-base" style={{ color: NAVY }}>CENTRAL NOIDA</h3>
-            <ul className="space-y-1.5 md:space-y-2">
-              {[
-                { href: '/projects/kothis', label: "Kothi's" },
-                { href: '/projects/dasnac-burj', label: 'Dasnac Burj' },
-                { href: '/projects/godrej-riverine', label: 'Godrej Riverine' },
-                { href: '/projects/godrej-woods', label: 'Godrej Woods' },
-                { href: '/projects/max-towers-16b', label: 'Max Towers 16B' },
-              ].map(({ href, label }) => (
-                <li key={href}>
-                  <Link href={href} className="text-gray-600 text-xs md:text-sm transition-colors hover:text-[#1a2744]">{label}</Link>
-                </li>
-              ))}
+            <ul className="space-y-1.5 md:space-y-2" suppressHydrationWarning>
+              {(() => {
+                const centralNames = ["Kothi's", 'Dasnac Burj', 'Godrej Riverine', 'Godrej Woods', 'Max Towers 16B'];
+                return centralNames.map(label => {
+                  const match = mounted ? footerProjects.find(p =>
+                    p.name.toLowerCase().includes(label.toLowerCase().split("'")[0]) ||
+                    label.toLowerCase().includes(p.name.toLowerCase().split('.')[0].trim())
+                  ) : undefined;
+                  return (
+                    <li key={label}>
+                      <Link
+                        href={match ? `/projects?id=${match.id}` : '/projects'}
+                        className="text-gray-600 text-xs md:text-sm transition-colors hover:text-[#1a2744]"
+                      >
+                        {label}
+                      </Link>
+                    </li>
+                  );
+                });
+              })()}
             </ul>
           </div>
 
+          {/* Contact */}
           <div>
             <h3 className="font-semibold mb-3 md:mb-4 text-sm md:text-base" style={{ color: NAVY }}>CONTACT</h3>
             <ul className="space-y-2 md:space-y-3">
@@ -120,15 +171,6 @@ export default function Footer() {
                 </svg>
                 <span className="text-gray-600 text-xs md:text-sm">info@nexiqueestate.com</span>
               </li>
-              {/* <li className="flex items-start">
-                <svg className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2 mt-0.5 flex-shrink-0" fill="none" stroke={NAVY} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <div className="text-gray-600 text-xs md:text-sm">
-                  315, Anthurium Office Spaces, Tower A, Sector-73, Uttar pradesh, 201301
-                </div>
-              </li> */}
             </ul>
           </div>
         </div>

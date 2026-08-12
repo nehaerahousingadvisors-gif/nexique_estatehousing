@@ -5,10 +5,16 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { collection, getDocs, query } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 
 const NAVY = '#1a2744';
 const NAVY_DARK = '#131e36';
+
+interface NavProject {
+  id: string;
+  name: string;
+}
 
 export default function Header() {
   const router = useRouter();
@@ -16,6 +22,7 @@ export default function Header() {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [navProjects, setNavProjects] = useState<NavProject[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -25,6 +32,26 @@ export default function Header() {
       setAuthLoading(false);
     });
     return () => unsub();
+  }, []);
+
+  // Fetch projects from Firebase for dropdown
+  useEffect(() => {
+    const fetchNavProjects = async () => {
+      try {
+        const snap = await getDocs(query(collection(db, 'properties')));
+        const projects: NavProject[] = snap.docs
+          .map(doc => ({
+            id: doc.id,
+            name: (doc.data().projectName || doc.data().name || '').trim(),
+          }))
+          .filter(p => p.name !== '')
+          .sort((a, b) => a.name.localeCompare(b.name));
+        setNavProjects(projects);
+      } catch {
+        // silently fail — dropdown will be empty
+      }
+    };
+    fetchNavProjects();
   }, []);
 
   useEffect(() => {
@@ -98,27 +125,20 @@ export default function Header() {
               </button>
 
               {/* Dropdown Menu */}
-              <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                {[
-                  { href: '/projects/ats-knightsbridge', label: 'ATS Knightsbridge' },
-                  { href: '/projects/m3m-cullinan', label: 'M3M Cullinan' },
-                  { href: '/projects/m3m-jacob-and-co', label: 'M3M Jacob & Co' },
-                  { href: '/projects/smartworld-elie-saab', label: 'Smartworld Elie Saab' },
-                  { href: '/projects/trump-tower', label: 'Trump Tower' },
-                  { href: '/projects/max-estate-128', label: 'Max Estate 128' },
-                  { href: '/projects/max-estate-105', label: 'Max Estate 105' },
-                  { href: '/projects/dasnac-westminster', label: 'Dasnac Westminster' },
-                  { href: '/projects/gulshan-taj-residences', label: 'Gulshan Taj Residences' },
-                  { href: '/projects/gulshan-dynasty', label: 'Gulshan Dynasty' },
-                ].map(({ href, label }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="block px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#1a2744] transition-colors"
-                  >
-                    {label}
-                  </Link>
-                ))}
+              <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 max-h-80 overflow-y-auto">
+                {navProjects.length === 0 ? (
+                  <span className="block px-5 py-3 text-sm text-gray-400">Loading projects...</span>
+                ) : (
+                  navProjects.map(({ id, name }) => (
+                    <Link
+                      key={id}
+                      href={`/projects?id=${id}`}
+                      className="block px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#1a2744] transition-colors"
+                    >
+                      {name}
+                    </Link>
+                  ))
+                )}
                 <div className="border-t border-gray-100 mt-1 pt-1">
                   <Link
                     href="/projects"

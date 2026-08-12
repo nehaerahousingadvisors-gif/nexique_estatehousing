@@ -172,6 +172,18 @@ function ProjectsContent() {
     }
   }, [searchParams]);
 
+  // Auto-select project from ?id= URL param (used by Header/Footer links)
+  useEffect(() => {
+    const idParam = searchParams.get('id');
+    if (!idParam || allProjects.length === 0) return;
+    const match = allProjects.find(p => p.firestoreId === idParam);
+    if (match) {
+      setSelectedProject(match);
+      // Scroll to top so detail view is visible
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [searchParams, allProjects]);
+
   // Filter projects based on selected category and search params
   const filteredProjects = allProjects.filter(project => {
     // Category filter

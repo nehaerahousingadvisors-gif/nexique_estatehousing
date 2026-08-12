@@ -109,7 +109,7 @@ export default function FeaturedProjects() {
             const bTime = b.data().createdAt?.toMillis?.() ?? 0;
             return bTime - aTime;
           })
-          .slice(0, 8)
+          .slice(0, 12)
           .map((doc, i) =>
             firestoreDocToFProject(doc.id, doc.data() as Record<string, any>, 10000 + i)
           );
