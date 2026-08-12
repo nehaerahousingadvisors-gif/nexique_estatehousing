@@ -22,12 +22,23 @@ export default function Footer() {
     const fetchProjects = async () => {
       try {
         const snap = await getDocs(query(collection(db, 'properties')));
+        const EXCLUDE_NAMES = [
+          'gulshan taj residences',
+          'm3m jacob & co',
+          'm3m the cullinan avenue',
+          'max estates 105',
+          'trump tower noida',
+        ];
+
         const projects: FooterProject[] = snap.docs
           .map(doc => ({
             id: doc.id,
             name: (doc.data().projectName || doc.data().name || '').trim(),
           }))
-          .filter(p => p.name !== '')
+          .filter(p =>
+            p.name !== '' &&
+            !EXCLUDE_NAMES.some(ex => p.name.toLowerCase().includes(ex))
+          )
           .sort((a, b) => a.name.localeCompare(b.name));
         setFooterProjects(projects);
       } catch {

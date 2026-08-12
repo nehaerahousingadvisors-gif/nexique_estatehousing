@@ -990,6 +990,129 @@ export default function AssetManagementPage() {
         </div>
       </section>
 
+      {/* ── Our Promise ──────────────────────────────────────────────────── */}
+      <section className="w-full py-8 md:py-10 bg-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative rounded-2xl overflow-hidden border border-slate-100 shadow-lg" style={{ backgroundColor: '#f8f9fb' }}>
+
+            {/* Background diagonal navy shape with city image */}
+            <div className="absolute right-0 top-0 bottom-0 w-1/2 hidden lg:block" style={{ backgroundColor: NAVY, clipPath: 'polygon(15% 0%, 100% 0%, 100% 100%, 0% 100%)' }}>
+              <div className="absolute inset-0">
+                <img
+                  src="https://images.unsplash.com/photo-1486325212027-8081e485255e?q=80&w=1000&auto=format&fit=crop"
+                  alt="City skyline"
+                  className="w-full h-full object-cover opacity-40"
+                />
+              </div>
+            </div>
+
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-0">
+              {/* Left content */}
+              <div className="p-6 md:p-8 lg:p-10">
+                {/* Title */}
+                <h2 className="text-3xl md:text-4xl font-extrabold mb-1.5 leading-tight">
+                  <span style={{ color: NAVY }}>OUR </span>
+                  <span style={{ color: GOLD }}>PROMISE</span>
+                </h2>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="h-0.5 w-12" style={{ backgroundColor: NAVY }} />
+                  <div className="flex gap-1">
+                    <div className="w-1 h-1 rounded-full" style={{ backgroundColor: GOLD }} />
+                    <div className="w-1 h-1 rounded-full" style={{ backgroundColor: GOLD }} />
+                    <div className="w-1 h-1 rounded-full" style={{ backgroundColor: GOLD }} />
+                  </div>
+                </div>
+
+                {/* Quote box */}
+                <div className="relative border-l-4 rounded-r-xl px-4 py-3 mb-4 bg-white shadow-sm" style={{ borderColor: GOLD }}>
+                  <svg className="absolute -top-2.5 -left-1.5 w-6 h-6 opacity-80" fill={GOLD} viewBox="0 0 24 24">
+                    <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                  </svg>
+                  <p className="text-slate-700 text-sm md:text-base leading-relaxed pl-3">
+                    Your property deserves more than occasional brokerage—it deserves{' '}
+                    <strong style={{ color: NAVY }}>professional asset management.</strong>
+                  </p>
+                </div>
+
+                {/* Description */}
+                <p className="text-slate-600 text-xs md:text-sm leading-relaxed mb-5">
+                  At Nexique Estate Housing Advisors, we are committed to protecting your investment, increasing occupancy, reducing vacancies, maintaining your property&apos;s condition, and delivering a seamless ownership experience through transparency, professionalism, and accountability.
+                </p>
+
+                {/* 5 Promise Icons */}
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                  {[
+                    {
+                      label: 'PROTECTING YOUR INVESTMENT',
+                      icon: (
+                        <svg className="w-5 h-5" fill="none" stroke="white" strokeWidth={1.8} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      label: 'INCREASING OCCUPANCY',
+                      icon: (
+                        <svg className="w-5 h-5" fill="none" stroke="white" strokeWidth={1.8} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      label: 'REDUCING VACANCIES',
+                      icon: (
+                        <svg className="w-5 h-5" fill="none" stroke="white" strokeWidth={1.8} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      label: "MAINTAINING YOUR PROPERTY'S CONDITION",
+                      icon: (
+                        <svg className="w-5 h-5" fill="none" stroke="white" strokeWidth={1.8} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      label: 'SEAMLESS OWNERSHIP EXPERIENCE',
+                      icon: (
+                        <svg className="w-5 h-5" fill="none" stroke="white" strokeWidth={1.8} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      ),
+                    },
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex flex-col items-center text-center gap-1.5">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center shadow flex-shrink-0"
+                        style={{ backgroundColor: NAVY }}
+                      >
+                        {item.icon}
+                      </div>
+                      <p className="text-[8px] md:text-[9px] font-bold uppercase tracking-wide leading-tight" style={{ color: NAVY }}>
+                        {item.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right — city image on mobile */}
+              <div className="lg:hidden relative h-44 overflow-hidden rounded-b-2xl">
+                <img
+                  src="https://images.unsplash.com/photo-1486325212027-8081e485255e?q=80&w=1000&auto=format&fit=crop"
+                  alt="City skyline"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${NAVY}80, transparent)` }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA ──────────────────────────────────────────────────────────── */}
       <section className="w-full py-14 md:py-20 bg-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
