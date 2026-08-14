@@ -52,7 +52,7 @@ export default function FeaturedWork() {
     <section ref={sectionRef} className="w-full py-10 overflow-hidden relative" style={{ backgroundColor: '#1a2744' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <div className="text-center">
-          <h3 className="text-2xl sm:text-4xl md:text-6xl font-bold text-white mb-2">AUGUST 15</h3>
+          <h3 className="text-2xl sm:text-4xl md:text-6xl font-bold text-white mb-2">15 AUGUST</h3>
           <h2 className="text-2xl sm:text-4xl md:text-6xl font-bold">
             <span style={{ color: '#FF9933' }}>Happy </span>
             <span className="text-white">Independence </span>
