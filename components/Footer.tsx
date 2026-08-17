@@ -31,6 +31,7 @@ export default function Footer() {
         ];
 
         const projects: FooterProject[] = snap.docs
+          .filter(doc => doc.data().source !== 'user_submission')
           .map(doc => ({
             id: doc.id,
             name: (doc.data().projectName || doc.data().name || '').trim(),

@@ -4,7 +4,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import AboutSection from './AboutSection';
-import ServicesSection from './ServicesSection';
 
 const NAVY = '#1a2744';
 const GOLD = '#C4A35A';
@@ -129,8 +128,639 @@ export default function AssetManagementPage() {
       {/* ── About Us ─────────────────────────────────────────────────────── */}
       <AboutSection />
 
-      {/* ── Services ─────────────────────────────────────────────────────── */}
-      <ServicesSection />
+      {/* ── Services Included ───────────────────────────────────────────── */}
+      <section id="services" className="w-full py-14 md:py-20 relative overflow-hidden" style={{ backgroundColor: '#fdf8f0' }}>
+        <div className="absolute inset-0 opacity-30 pointer-events-none">
+          <div className="absolute top-10 left-10 w-64 h-64 rounded-full" style={{ backgroundColor: `${GOLD}15` }} />
+          <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full" style={{ backgroundColor: `${GOLD}10` }} />
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 md:mb-14">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4" style={{ color: NAVY, letterSpacing: '0.02em' }}>
+              SERVICES <span style={{ color: GOLD }}>INCLUDED</span>
+            </h2>
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-0.5 w-20 md:w-28" style={{ backgroundColor: GOLD }} />
+              <svg className="w-6 h-6 md:w-8 md:h-8" fill={GOLD} viewBox="0 0 24 24">
+                <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" />
+              </svg>
+              <div className="h-0.5 w-20 md:w-28" style={{ backgroundColor: GOLD }} />
+            </div>
+            <p className="text-gray-500 text-base md:text-lg max-w-3xl mx-auto">
+              Our comprehensive property asset management services cover every aspect of your investment, ensuring maximum returns with complete peace of mind.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-7">
+            {/* 01 Complete Property Asset Management */}
+            <div className="relative bg-white rounded-2xl border-2 p-6 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1" style={{ borderColor: `${GOLD}40` }}>
+              <div className="absolute -top-4 left-5">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: NAVY }}>
+                  <span className="text-xl md:text-2xl font-black" style={{ color: GOLD }}>01</span>
+                </div>
+              </div>
+              <div className="pt-10">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center flex-shrink-0 shadow-md" style={{ backgroundColor: NAVY }}>
+                    <svg className="w-8 h-8 md:w-10 md:h-10" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 16.5c1.5-1.5 3.5-2 5.5-1.5M14 15c1.5-0.5 3.5 0 5.5 1.5M12 12c-2 0-3.5 1-3.5 2.5M15.5 14.5c0-1.5-1.5-2.5-3.5-2.5" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 22c-4 0-7.5-2.5-9-6 1.5-3.5 5-6 9-6s7.5 2.5 9 6c-1.5 3.5-5 6-9 6z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 pt-2">
+                    <h3 className="text-xl md:text-2xl font-extrabold leading-tight mb-1" style={{ color: NAVY }}>
+                      Complete Property<br />Asset Management
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm md:text-base leading-relaxed">
+                  We professionally manage your residential and commercial properties from start to finish, ensuring your investment remains secure, profitable, and hassle-free.
+                </p>
+              </div>
+            </div>
+
+            {/* 02 Residential & Commercial Property Management */}
+            <div className="relative bg-white rounded-2xl border-2 p-6 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1" style={{ borderColor: `${GOLD}40` }}>
+              <div className="absolute -top-4 left-5">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: NAVY }}>
+                  <span className="text-xl md:text-2xl font-black" style={{ color: GOLD }}>02</span>
+                </div>
+              </div>
+              <div className="pt-10">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center flex-shrink-0 shadow-md" style={{ backgroundColor: NAVY }}>
+                    <svg className="w-8 h-8 md:w-10 md:h-10" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m0-14a1 1 0 011-1h2a1 1 0 011 1v4m-6 0a1 1 0 011-1h2a1 1 0 011 1m-6 2h6m-6 4h6" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 pt-2">
+                    <h3 className="text-xl md:text-2xl font-extrabold leading-tight mb-3" style={{ color: NAVY }}>
+                      Residential & Commercial<br />Property Management
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-sm md:text-base font-semibold mb-3" style={{ color: NAVY }}>We manage:</p>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  {['Apartments', 'Retail Shops', 'Villas', 'Commercial Buildings', 'Independent Houses', 'Warehouses', 'Builder Floors', 'Industrial Units', 'Office Spaces', 'Investment Portfolios'].map((item, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: GOLD }} />
+                      <span className="text-sm md:text-base text-gray-700">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 03 Exclusive Property Marketing */}
+            <div className="relative bg-white rounded-2xl border-2 p-6 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1" style={{ borderColor: `${GOLD}40` }}>
+              <div className="absolute -top-4 left-5">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: NAVY }}>
+                  <span className="text-xl md:text-2xl font-black" style={{ color: GOLD }}>03</span>
+                </div>
+              </div>
+              <div className="pt-10">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center flex-shrink-0 shadow-md" style={{ backgroundColor: NAVY }}>
+                    <svg className="w-8 h-8 md:w-10 md:h-10" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.5 7.5l3-3M15.5 7.5l-3-3M18.5 10.5h.01" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 pt-2">
+                    <h3 className="text-xl md:text-2xl font-extrabold leading-tight mb-3" style={{ color: NAVY }}>
+                      Exclusive Property<br />Marketing
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-4">
+                  Your property receives priority marketing. Every buyer or tenant approaching Nexique Estate Housing Advisors is first introduced to your property before any other available properties.
+                </p>
+                <p className="text-sm md:text-base font-bold mb-3" style={{ color: NAVY }}>Marketing includes:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { label: 'Premium Digital Marketing', icon: '📱' },
+                    { label: 'Social Media Marketing', icon: '💬' },
+                    { label: 'Real Estate Portals', icon: '🏠' },
+                    { label: 'Channel Partner Network', icon: '🤝' },
+                    { label: 'Corporate Leasing Network', icon: '🏢' },
+                    { label: 'Broker Network', icon: '👥' },
+                    { label: 'Investor Network', icon: '💼' },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="text-base">{item.icon}</span>
+                      <span className="text-xs md:text-sm font-semibold" style={{ color: NAVY }}>{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 04 Leasing Management */}
+            <div className="relative bg-white rounded-2xl border-2 p-6 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1" style={{ borderColor: `${GOLD}40` }}>
+              <div className="absolute -top-4 left-5">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: NAVY }}>
+                  <span className="text-xl md:text-2xl font-black" style={{ color: GOLD }}>04</span>
+                </div>
+              </div>
+              <div className="pt-10">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center flex-shrink-0 shadow-md" style={{ backgroundColor: NAVY }}>
+                    <svg className="w-8 h-8 md:w-10 md:h-10" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14 19v-6a2 2 0 00-2-2h-1.5M12 8l3-3 3 3M15 5v10M17.5 11h.01" />
+                      <circle cx="7.5" cy="10.5" r="0.5" fill={GOLD} />
+                      <circle cx="7.5" cy="12.5" r="0.5" fill={GOLD} />
+                      <circle cx="7.5" cy="14.5" r="0.5" fill={GOLD} />
+                    </svg>
+                  </div>
+                  <div className="flex-1 pt-2">
+                    <h3 className="text-xl md:text-2xl font-extrabold leading-tight mb-3" style={{ color: NAVY }}>
+                      Leasing Management
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-sm md:text-base font-semibold mb-3" style={{ color: NAVY }}>Complete leasing assistance including:</p>
+                <ul className="space-y-2.5">
+                  {['Tenant Search', 'Property Showings', 'Rent Negotiation', 'Documentation', 'Lease Agreement Coordination', 'Move-in Coordination', 'Lease Renewal Assistance'].map((item, i) => (
+                    <li key={i} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: GOLD }}>
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="white" strokeWidth={3.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="text-sm md:text-base text-gray-700 font-medium">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* 05 Property Sale Management */}
+            <div className="relative bg-white rounded-2xl border-2 p-6 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1" style={{ borderColor: `${GOLD}40` }}>
+              <div className="absolute -top-4 left-5">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: NAVY }}>
+                  <span className="text-xl md:text-2xl font-black" style={{ color: GOLD }}>05</span>
+                </div>
+              </div>
+              <div className="pt-10">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center flex-shrink-0 shadow-md" style={{ backgroundColor: NAVY }}>
+                    <svg className="w-8 h-8 md:w-10 md:h-10" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l1.5 4L18 7.5l-4 2L15.5 14 12 11.5 8.5 14l1.5-4.5-4-2 4.5-1.5z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 pt-2">
+                    <h3 className="text-xl md:text-2xl font-extrabold leading-tight mb-3" style={{ color: NAVY }}>
+                      Property Sale<br />Management
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-3">
+                  We handle your complete sale process, including:
+                </p>
+                <ul className="space-y-2.5">
+                  {['Property Marketing', 'Buyer Screening', 'Site Visits', 'Price Negotiation', 'Documentation Assistance', 'Sale Coordination', 'Registration Support (where applicable)'].map((item, i) => (
+                    <li key={i} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: GOLD }}>
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="white" strokeWidth={3.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="text-sm md:text-base text-gray-700 font-medium">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* 06 Tenant Due Diligence */}
+            <div className="relative bg-white rounded-2xl border-2 p-6 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1" style={{ borderColor: `${GOLD}40` }}>
+              <div className="absolute -top-4 left-5">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: NAVY }}>
+                  <span className="text-xl md:text-2xl font-black" style={{ color: GOLD }}>06</span>
+                </div>
+              </div>
+              <div className="pt-10">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center flex-shrink-0 shadow-md" style={{ backgroundColor: NAVY }}>
+                    <svg className="w-8 h-8 md:w-10 md:h-10" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      <circle cx="12" cy="11" r="2.5" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 16.5c1.2-1.5 3-2.5 4.5-2.5s3.3 1 4.5 2.5" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 pt-2">
+                    <h3 className="text-xl md:text-2xl font-extrabold leading-tight mb-3" style={{ color: NAVY }}>
+                      Tenant Due Diligence
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-3">
+                  Every tenant undergoes a complete verification process before occupying your property. This includes:
+                </p>
+                <div className="grid grid-cols-2 gap-2.5 mb-4">
+                  {['KYC Verification', 'Previous Landlord Reference Check', 'Identity Verification', 'Background Verification', 'Employment Verification', 'Police Verification Assistance', 'Income Verification', 'Document Authentication', 'Address Verification'].map((item, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="w-4.5 h-4.5 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: GOLD }}>
+                        <svg className="w-2 h-2 text-white" fill="none" stroke="white" strokeWidth={4} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="text-xs md:text-sm text-gray-700 font-medium">{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 p-4 rounded-xl" style={{ backgroundColor: `${GOLD}12` }}>
+                  <p className="text-sm md:text-base font-semibold italic text-center" style={{ color: NAVY }}>
+                    🛡️ Your hard-earned property is entrusted only to verified and responsible occupants.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 07 Dedicated Property Asset Manager */}
+            <div className="relative bg-white rounded-2xl border-2 p-6 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 md:col-span-1" style={{ borderColor: `${GOLD}40` }}>
+              <div className="absolute -top-4 left-5">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: NAVY }}>
+                  <span className="text-xl md:text-2xl font-black" style={{ color: GOLD }}>07</span>
+                </div>
+              </div>
+              <div className="pt-10">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center flex-shrink-0 shadow-md" style={{ backgroundColor: NAVY }}>
+                    <svg className="w-8 h-8 md:w-10 md:h-10" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <circle cx="12" cy="8" r="3.5" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 20v-2a4 4 0 014-4h6a4 4 0 014 4v2" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 5h.01M18 7h.01M12 4h.01M6 7h.01M9 5h.01" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 pt-2">
+                    <h3 className="text-xl md:text-2xl font-extrabold leading-tight mb-3" style={{ color: NAVY }}>
+                      Dedicated Property<br />Asset Manager
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-3">
+                  Every enrolled client is assigned a dedicated Property Asset Manager. Your manager will:
+                </p>
+                <div className="grid grid-cols-2 gap-2.5 mb-4">
+                  {[
+                    'Handle all tenant communication',
+                    'Coordinate vendors',
+                    'Coordinate with buyers',
+                    'Manage documentation',
+                    'Manage maintenance',
+                    'Provide regular updates',
+                    'Schedule inspections',
+                    'Assist during lease renewals',
+                    'Handle complaints',
+                    'Support property sales',
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5" style={{ backgroundColor: GOLD }} />
+                      <span className="text-xs md:text-sm text-gray-700 font-medium">{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 p-4 rounded-xl" style={{ backgroundColor: `${GOLD}12` }}>
+                  <p className="text-sm md:text-lg font-bold text-center leading-tight" style={{ color: NAVY }}>
+                    One dedicated professional.<br />One point of contact.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 08 Complete Tenant Management */}
+            <div className="relative bg-white rounded-2xl border-2 p-6 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 md:col-span-1" style={{ borderColor: `${GOLD}40` }}>
+              <div className="absolute -top-4 left-5">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: NAVY }}>
+                  <span className="text-xl md:text-2xl font-black" style={{ color: GOLD }}>08</span>
+                </div>
+              </div>
+              <div className="pt-10">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center flex-shrink-0 shadow-md" style={{ backgroundColor: NAVY }}>
+                    <svg className="w-8 h-8 md:w-10 md:h-10" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <circle cx="9" cy="8" r="2.5" />
+                      <circle cx="17" cy="9" r="2" />
+                      <circle cx="13" cy="7" r="2.5" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 19v-1a4 4 0 014-4h10a4 4 0 014 4v1" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14 15h.01M5 18h14M6 15h12M7 16h10" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 pt-2">
+                    <h3 className="text-xl md:text-2xl font-extrabold leading-tight mb-3" style={{ color: NAVY }}>
+                      Complete Tenant<br />Management
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-3">
+                  We manage all day-to-day tenant matters, including:
+                </p>
+                <ul className="space-y-2.5">
+                  {[
+                    'Complaint Resolution',
+                    'Maintenance Requests',
+                    'Follow-ups',
+                    'Tenant Coordination',
+                    'Lease Renewals',
+                    'Communication on the owner’s behalf',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: GOLD }}>
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="white" strokeWidth={3.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="text-sm md:text-base text-gray-700 font-medium">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-5 p-4 rounded-xl" style={{ backgroundColor: `${GOLD}12` }}>
+                  <p className="text-sm md:text-base font-semibold italic text-center leading-relaxed" style={{ color: NAVY }}>
+                    You stay worry-free while we handle the operational responsibilities.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 09 Monthly Property Inspection */}
+            <div className="relative bg-white rounded-2xl border-2 p-6 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 md:col-span-1" style={{ borderColor: `${GOLD}40` }}>
+              <div className="absolute -top-4 left-5">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: NAVY }}>
+                  <span className="text-xl md:text-2xl font-black" style={{ color: GOLD }}>09</span>
+                </div>
+              </div>
+              <div className="pt-10">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center flex-shrink-0 shadow-md" style={{ backgroundColor: NAVY }}>
+                    <svg className="w-8 h-8 md:w-10 md:h-10" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 9l1 1 2-2" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 12l1 1 2-2M10 15l1 1 2-2" />
+                      <circle cx="18" cy="8" r="2.5" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 9.5l3 3" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 pt-2">
+                    <h3 className="text-xl md:text-2xl font-extrabold leading-tight mb-3" style={{ color: NAVY }}>
+                      Monthly Property<br />Inspection
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-3">
+                  Our team visits every managed property to:
+                </p>
+                <ul className="space-y-2.5">
+                  {[
+                    'Inspect cleanliness',
+                    'Monitor property condition',
+                    'Check for damages',
+                    'Ensure proper tenant upkeep',
+                    'Identify preventive maintenance needs',
+                    'Protect the long-term value of your asset',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-3">
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: GOLD }} />
+                      <span className="text-sm md:text-base text-gray-700 font-medium">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* 10 Monthly Deep Cleaning */}
+            <div className="relative bg-white rounded-2xl border-2 p-6 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1" style={{ borderColor: `${GOLD}40` }}>
+              <div className="absolute -top-4 left-5">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: NAVY }}>
+                  <span className="text-xl md:text-2xl font-black" style={{ color: GOLD }}>10</span>
+                </div>
+              </div>
+              <div className="pt-10">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center flex-shrink-0 shadow-md" style={{ backgroundColor: NAVY }}>
+                    <svg className="w-8 h-8 md:w-10 md:h-10" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 21l-4-4 4-4 4 4-4 4zM15 21V5m0 16l4-4-4-4 4-4M15 5a3 3 0 100 6M9 14v.01" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l1 1 2-2" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 8l.01.01M7 11l.01.01M10 8l.01.01M13 11l.01.01M16 8l.01.01M19 11l.01.01" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 pt-2">
+                    <h3 className="text-xl md:text-2xl font-extrabold leading-tight mb-3" style={{ color: NAVY }}>
+                      Monthly Deep<br />Cleaning
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm md:text-base leading-relaxed">
+                  Professional monthly deep cleaning helps maintain hygiene, appearance, and property value.
+                </p>
+              </div>
+            </div>
+
+            {/* 11 Weekly Updates */}
+            <div className="relative bg-white rounded-2xl border-2 p-6 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1" style={{ borderColor: `${GOLD}40` }}>
+              <div className="absolute -top-4 left-5">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: NAVY }}>
+                  <span className="text-xl md:text-2xl font-black" style={{ color: GOLD }}>11</span>
+                </div>
+              </div>
+              <div className="pt-10">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center flex-shrink-0 shadow-md" style={{ backgroundColor: NAVY }}>
+                    <svg className="w-8 h-8 md:w-10 md:h-10" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <rect x="3" y="5" width="18" height="16" rx="2" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M8 3v4M16 3v4M8 14h.01M11 14h.01M14 14h.01M8 17h.01M11 17h.01M14 17h.01" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 pt-2">
+                    <h3 className="text-xl md:text-2xl font-extrabold leading-tight mb-3" style={{ color: NAVY }}>
+                      Weekly Updates
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm md:text-base leading-relaxed">
+                  Transparency is at the heart of our service. You&rsquo;ll receive weekly updates covering key activities and next steps.
+                </p>
+              </div>
+            </div>
+
+            {/* 12 Secure Key Management */}
+            <div className="relative bg-white rounded-2xl border-2 p-6 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1" style={{ borderColor: `${GOLD}40` }}>
+              <div className="absolute -top-4 left-5">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: NAVY }}>
+                  <span className="text-xl md:text-2xl font-black" style={{ color: GOLD }}>12</span>
+                </div>
+              </div>
+              <div className="pt-10">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center flex-shrink-0 shadow-md" style={{ backgroundColor: NAVY }}>
+                    <svg className="w-8 h-8 md:w-10 md:h-10" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <circle cx="8" cy="15" r="3.5" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.85 12.15L19 4m0 0h3m-3 0v3m-1.5-1.5l.7-.7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.5 7.5l1.5-1.5M14 13h3m-3 3h3M14 17h3" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 pt-2">
+                    <h3 className="text-xl md:text-2xl font-extrabold leading-tight mb-3" style={{ color: NAVY }}>
+                      Secure Key<br />Management
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm md:text-base leading-relaxed">
+                  We maintain secure key storage and controlled access so only authorised representatives and verified prospects can access your property.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Cards 13, 14, 15 — Wider 3-column layout (no gap between sections) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-7 mt-5 md:mt-8">
+            {/* 13 Vendor Coordination */}
+            <div className="relative bg-white rounded-2xl border-2 p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-0.5" style={{ borderColor: `${GOLD}40` }}>
+              <div className="absolute -top-4 left-5">
+                <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: NAVY }}>
+                  <span className="text-lg md:text-xl font-black" style={{ color: GOLD }}>13</span>
+                </div>
+              </div>
+              <div className="pt-6 md:pt-7">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-3 md:gap-4">
+                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center flex-shrink-0 shadow-md self-start" style={{ backgroundColor: NAVY }}>
+                    <svg className="w-7 h-7 md:w-8 md:h-8" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <circle cx="9" cy="8" r="2.5" />
+                      <circle cx="17" cy="8" r="2.5" />
+                      <circle cx="13" cy="16" r="2.5" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 9.5l1.5 5M15 9.5l-1.5 5M5 20c0-1.5 1.5-3 4-3M19 20c0-1.5-1.5-3-4-3" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 16h10M5 13h2M17 13h2" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg md:text-xl font-extrabold leading-tight mb-2" style={{ color: NAVY }}>
+                      Vendor Coordination
+                    </h3>
+                    <p className="text-xs md:text-sm font-semibold mb-2.5" style={{ color: NAVY }}>
+                      We coordinate trusted professionals for:
+                    </p>
+                    <div className="grid grid-cols-2 gap-1.5 md:gap-2 mb-3">
+                      {[
+                        'Plumbing',
+                        'AC Services',
+                        'Electrical Work',
+                        'Pest Control',
+                        'Carpentry',
+                        'Cleaning Services',
+                        'Painting',
+                      ].map((item, i) => (
+                        <div key={i} className="flex items-start gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5" style={{ backgroundColor: GOLD }} />
+                          <span className="text-[11px] md:text-xs text-gray-700 font-medium leading-tight">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[11px] md:text-xs italic font-medium text-center mt-3 pt-2.5" style={{ color: NAVY, borderTop: `1.5px dashed ${GOLD}40` }}>
+                      (Third-party vendor charges are extra.)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 14 Documentation Assistance */}
+            <div className="relative bg-white rounded-2xl border-2 p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-0.5" style={{ borderColor: `${GOLD}40` }}>
+              <div className="absolute -top-4 left-5">
+                <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: NAVY }}>
+                  <span className="text-lg md:text-xl font-black" style={{ color: GOLD }}>14</span>
+                </div>
+              </div>
+              <div className="pt-6 md:pt-7">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-3 md:gap-4">
+                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center flex-shrink-0 shadow-md self-start" style={{ backgroundColor: NAVY }}>
+                    <svg className="w-7 h-7 md:w-8 md:h-8" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 13h12M6 17h8" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg md:text-xl font-extrabold leading-tight mb-2" style={{ color: NAVY }}>
+                      Documentation Assistance
+                    </h3>
+                    <p className="text-xs md:text-sm font-semibold mb-2.5" style={{ color: NAVY }}>
+                      Support for:
+                    </p>
+                    <ul className="space-y-1.5 md:space-y-2">
+                      {[
+                        'Lease Agreements',
+                        'Sale Documentation',
+                        'Property Records',
+                        'Tenant Documentation',
+                        'Verification Documents',
+                      ].map((item, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <div className="w-3.5 h-3.5 md:w-4 md:h-4 rounded flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: `${GOLD}20`, border: `1px solid ${GOLD}60` }}>
+                            <svg className="w-2 h-2 md:w-2.5 md:h-2.5" fill="none" stroke={GOLD} strokeWidth={2.5} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </div>
+                          <span className="text-[11px] md:text-xs font-bold text-gray-700 leading-snug">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 15 Investment Advisory */}
+            <div className="relative bg-white rounded-2xl border-2 p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-0.5" style={{ borderColor: `${GOLD}40` }}>
+              <div className="absolute -top-4 left-5">
+                <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: NAVY }}>
+                  <span className="text-lg md:text-xl font-black" style={{ color: GOLD }}>15</span>
+                </div>
+              </div>
+              <div className="pt-6 md:pt-7">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-3 md:gap-4">
+                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center flex-shrink-0 shadow-md self-start" style={{ backgroundColor: NAVY }}>
+                    <svg className="w-7 h-7 md:w-8 md:h-8" fill="none" stroke={GOLD} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 21V13M12 21V7M17 21v-6" strokeWidth={2.2} />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h18" strokeWidth={2} />
+                      <rect x="5" y="14" width="4" height="7" rx="0.5" fill={GOLD} fillOpacity="0.25" />
+                      <rect x="10" y="8" width="4" height="13" rx="0.5" fill={GOLD} fillOpacity="0.4" />
+                      <rect x="15" y="15.5" width="4" height="5.5" rx="0.5" fill={GOLD} fillOpacity="0.25" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l5-6 4 4 5-7" strokeWidth={2.2} />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 3h4v4" strokeWidth={2.2} />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg md:text-xl font-extrabold leading-tight mb-2" style={{ color: NAVY }}>
+                      Investment Advisory
+                    </h3>
+                    <p className="text-xs md:text-sm font-semibold mb-2.5" style={{ color: NAVY }}>
+                      Helping property owners:
+                    </p>
+                    <ul className="space-y-1.5 md:space-y-2">
+                      {[
+                        'Maximise rental income',
+                        'Plan property sales',
+                        'Improve occupancy',
+                        'Make informed investment decisions',
+                      ].map((item, i) => (
+                        <li key={i} className="flex items-start gap-2 p-2 rounded-lg transition-all duration-200 hover:scale-[1.01]" style={{ backgroundColor: `${GOLD}10` }}>
+                          <span className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5" style={{ backgroundColor: GOLD }} />
+                          <span className="text-[11px] md:text-xs font-bold leading-snug" style={{ color: NAVY }}>
+                            {item}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ── Brokerage Benefits ────────────────────────────────────────────── */}
       <section ref={benefitsRef} id="benefits" className="w-full py-14 md:py-20 bg-white relative overflow-hidden">

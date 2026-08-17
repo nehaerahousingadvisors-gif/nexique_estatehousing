@@ -40,6 +40,7 @@ export default function Header() {
       try {
         const snap = await getDocs(query(collection(db, 'properties')));
         const projects: NavProject[] = snap.docs
+          .filter(doc => doc.data().source !== 'user_submission')
           .map(doc => ({
             id: doc.id,
             name: (doc.data().projectName || doc.data().name || '').trim(),

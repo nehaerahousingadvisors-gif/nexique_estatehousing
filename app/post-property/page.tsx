@@ -651,6 +651,7 @@ export default function PostPropertyPage() {
         // Admin
         userId: user.uid,
         userEmail: user.email,
+        source: 'user_submission',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
