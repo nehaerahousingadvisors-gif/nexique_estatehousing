@@ -789,28 +789,33 @@ export default function AssetManagementPage() {
 
           {/* ── Commercial Leasing ─────────────────────────────────────── */}
           <div className="relative mb-10 md:mb-14">
-            <div className="relative mx-auto w-full sm:w-[360px] md:w-[420px] mb-0 md:-mb-4 z-10">
+            <div className="relative mx-auto w-full sm:w-[480px] md:w-[620px] mb-0 md:-mb-4 z-10">
               <div
-                className="relative flex items-center justify-center gap-3 py-4 px-8"
+                className="relative flex items-center justify-center gap-3 py-4 px-6 md:px-8 whitespace-nowrap"
                 style={{
                   backgroundColor: NAVY,
-                  clipPath: 'polygon(12% 0%, 88% 0%, 100% 100%, 0% 100%)',
+                  clipPath: 'polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%)',
                 }}
               >
                 <svg className="w-7 h-7 md:w-8 md:h-8 flex-shrink-0" fill={GOLD} viewBox="0 0 24 24">
                   <path d="M7 21V3h10v18H7zm2-2h2v-2H9v2zm4 0h2v-2h-2v2zm-4-4h2v-2H9v2zm4 0h2v-2h-2v2zm-4-4h2V9H9v2zm4 0h2V9h-2v2zm-4-4h2V5H9v2zm4 0h2V5h-2v2z" />
                 </svg>
-                <span className="text-xl md:text-2xl font-extrabold uppercase tracking-wider" style={{ color: GOLD }}>
-                  Commercial Leasing
+                <span className="text-xl md:text-3xl font-extrabold uppercase tracking-wider" style={{ color: GOLD }}>
+                  Properties FOR LEASING
                 </span>
               </div>
             </div>
 
             <div className="rounded-3xl border border-slate-200 bg-white p-5 md:p-8 shadow-lg">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-                {/* Office Spaces */}
-                <div data-slide="left" className="rounded-2xl border border-slate-200 p-5 md:p-6 bg-white">
-                  <div className="flex items-start gap-4 mb-5">
+                {/* Office Spaces - COMMERCIAL LEASING */}
+                <div data-slide="left" className="rounded-2xl border border-slate-200 p-5 md:p-6 bg-white relative">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
+                    <div className="px-5 py-1.5 rounded-full text-xs md:text-sm font-extrabold uppercase tracking-widest" style={{ backgroundColor: NAVY, color: GOLD }}>
+                      Commercial Leasing
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 mb-5 mt-3">
                     <div
                       className="flex-shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center"
                       style={{ backgroundColor: NAVY }}
@@ -864,20 +869,25 @@ export default function AssetManagementPage() {
                   </div>
                 </div>
 
-                {/* Retail Spaces */}
-                <div data-slide="right" className="rounded-2xl border border-slate-200 p-5 md:p-6 bg-white">
-                  <div className="flex items-start gap-4 mb-5">
+                {/* Residential Properties - RESIDENTIAL LEASING */}
+                <div data-slide="right" className="rounded-2xl border border-slate-200 p-5 md:p-6 bg-white relative">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
+                    <div className="px-5 py-1.5 rounded-full text-xs md:text-sm font-extrabold uppercase tracking-widest" style={{ backgroundColor: GOLD, color: NAVY }}>
+                      Residential Leasing
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 mb-5 mt-3">
                     <div
                       className="flex-shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center"
                       style={{ backgroundColor: NAVY }}
                     >
                       <svg className="w-7 h-7 md:w-8 md:h-8" fill={GOLD} viewBox="0 0 24 24">
-                        <path d="M5 6V4h14v2h2v2l-2 11H5L3 8V6h2zm1 3l1.5 9h9L18 9H6zm1.5 2h9l-1 6h-7l-1-6z" />
+                        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                       </svg>
                     </div>
                     <div className="flex-1 pt-1">
                       <h3 className="text-base md:text-lg font-extrabold uppercase tracking-wide mb-1" style={{ color: NAVY }}>
-                        Retail Spaces / Shops
+                        Residential Properties / Apartments &amp; Villas
                       </h3>
                       <div className="h-px bg-slate-200 w-full" />
                     </div>
@@ -897,7 +907,7 @@ export default function AssetManagementPage() {
                       </div>
                       <p className="text-xs text-slate-500 mb-1">Brokerage:</p>
                       <p className="text-xl md:text-2xl font-extrabold" style={{ color: NAVY }}>
-                        20 DAYS&apos; RENT
+                        ONE MONTH&apos;S RENT
                       </p>
                     </div>
                     <div className="text-center pl-1">
@@ -914,7 +924,7 @@ export default function AssetManagementPage() {
                       </div>
                       <p className="text-xs text-slate-500 mb-1">Brokerage:</p>
                       <p className="text-xl md:text-2xl font-extrabold" style={{ color: GREEN }}>
-                        ONLY 10 DAYS&apos; RENT
+                        ONLY 15 DAYS&apos; RENT
                       </p>
                     </div>
                   </div>

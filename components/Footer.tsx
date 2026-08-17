@@ -28,6 +28,7 @@ export default function Footer() {
           'm3m the cullinan avenue',
           'max estates 105',
           'trump tower noida',
+          'anthurium',
         ];
 
         const projects: FooterProject[] = snap.docs
@@ -113,7 +114,7 @@ export default function Footer() {
 
           {/* Projects — dynamic from Firebase */}
           <div>
-            <h3 className="font-semibold mb-3 md:mb-4 text-sm md:text-base" style={{ color: NAVY }}>PROJECTS</h3>
+            <h3 className="font-semibold mb-3 md:mb-4 text-sm md:text-base" style={{ color: NAVY }}>Noida-Greater Noida Expressway</h3>
             <ul className="space-y-1.5 md:space-y-2" suppressHydrationWarning>
               {!mounted ? (
                 <li className="text-gray-400 text-xs">Loading...</li>
