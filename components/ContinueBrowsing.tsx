@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 const NAVY = '#1a2744';
 
 const tabs = [
-  { label: 'Buy on Noida', query: 'buy-noida' },
-  { label: 'Buy on Greater Noida', query: 'buy-greater-noida' },
-  { label: 'Buy on Central Noida', query: 'buy-central-noida' },
+  { label: 'Buy in Noida', query: 'buy-noida' },
+  { label: 'Buy in Greater Noida', query: 'buy-greater-noida' },
+  { label: 'Buy in Central Noida', query: 'buy-central-noida' },
   { label: 'Buy on Yamuna Expressway', query: 'buy-yamuna-expressway' },
 ];
 

@@ -32,208 +32,299 @@ type FProject = {
 
 const categories = ['All', 'Residential', 'Commercial', 'Plots'];
 
-function firestoreDocToFProject(docId: string, data: Record<string, any>, startId: number): FProject {
-  const photos: string[] = data.photos || [];
-  const image = data.image || data.imageUrl || data.heroImage || photos[0]
+function toProject(docId: string, d: Record<string, any>, i: number): FProject {
+  const photos: string[] = d.photos || [];
+  const image = d.image || d.imageUrl || d.heroImage || photos[0]
     || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=800&auto=format&fit=crop';
-  const heroImage = data.heroImage || photos[0] || image;
-
+  const heroImage = d.heroImage || photos[0] || image;
   let price = 'Price on Request';
-  if (data.expectedPrice && Number(data.expectedPrice) > 0) {
-    const amt = Number(data.expectedPrice);
-    price = amt >= 10000000
-      ? `₹${(amt / 10000000).toFixed(2).replace(/\.?0+$/, '')} Cr onwards`
-      : amt >= 100000
-        ? `₹${(amt / 100000).toFixed(2).replace(/\.?0+$/, '')} Lac onwards`
-        : `₹${amt.toLocaleString('en-IN')} onwards`;
-  } else if (data.price) {
-    price = data.price;
-  }
-
-  const cat = data.propertyCategory === 'Commercial' ? 'Commercial'
-    : data.propertyType?.toLowerCase().includes('plot') ? 'Plots'
-    : data.category || 'Residential';
-
+  if (d.expectedPrice && Number(d.expectedPrice) > 0) {
+    const a = Number(d.expectedPrice);
+    price = a >= 10000000 ? `₹${(a / 10000000).toFixed(2).replace(/\.?0+$/, '')} Cr onwards`
+      : a >= 100000 ? `₹${(a / 100000).toFixed(2).replace(/\.?0+$/, '')} Lac onwards`
+      : `₹${a.toLocaleString('en-IN')} onwards`;
+  } else if (d.price) price = d.price;
+  const cat = d.propertyCategory === 'Commercial' ? 'Commercial'
+    : d.propertyType?.toLowerCase().includes('plot') ? 'Plots'
+    : d.category || 'Residential';
   return {
-    id: startId,
-    firestoreId: docId,
-    name: data.projectName || data.name || `${data.propertyType || 'Property'} in ${data.city || 'NCR'}`,
-    location: data.projectLocation || data.location || `${data.locality || ''}, ${data.city || 'NCR'}`.replace(/^, |, $/, ''),
-    price,
-    category: cat,
-    isExclusive: false,
-    image,
-    heroImage,
-    status: data.availability || data.status || 'Ready to Move',
-    launchYear: data.launchYear || new Date().getFullYear().toString(),
-    developer: data.developer || data.developerName || '',
-    reraNumber: data.reraNumber || '',
-    overview: data.overview || `A ${data.propertyType || 'property'} in ${data.city || 'NCR'}.`,
-    details: data.details?.length ? data.details : [
-      { label: 'Inventory Type', value: data.inventoryType || '' },
-      { label: 'Project', value: data.projectName || '' },
-      { label: 'Developer', value: data.developer || '' },
-      { label: 'Location', value: data.projectLocation || data.location || '' },
-      { label: 'RERA Number', value: data.reraNumber || '' },
-      { label: 'Status', value: data.availability || data.status || '' },
-    ].filter(d => d.value),
+    id: i, firestoreId: docId,
+    name: d.projectName || d.name || `Property in ${d.city || 'NCR'}`,
+    location: (d.projectLocation || d.location || `${d.locality || ''}, ${d.city || 'NCR'}`).replace(/^, |, $/, ''),
+    price, category: cat, isExclusive: false, image, heroImage,
+    status: d.availability || d.status || 'Ready to Move',
+    launchYear: d.launchYear || String(new Date().getFullYear()),
+    developer: d.developer || d.developerName || '',
+    reraNumber: d.reraNumber || '',
+    overview: d.overview || `A property in ${d.city || 'NCR'}.`,
+    details: d.details?.length ? d.details : [
+      { label: 'Inventory Type', value: d.inventoryType || '' },
+      { label: 'Project', value: d.projectName || '' },
+      { label: 'Developer', value: d.developer || '' },
+      { label: 'Location', value: d.projectLocation || d.location || '' },
+      { label: 'RERA Number', value: d.reraNumber || '' },
+      { label: 'Status', value: d.availability || d.status || '' },
+    ].filter(x => x.value),
     amenitiesImage: photos[photos.length - 1] || heroImage,
     amenitiesCaption: 'Property Amenities',
-    locationHighlights: data.connectivityHighlights || data.locationHighlights || [],
-    configurations: Array.isArray(data.configurations) ? data.configurations : (data.bedrooms ? [`${data.bedrooms} BHK`] : []),
-    amenities: Array.isArray(data.amenities) ? data.amenities : [],
-    mediaGallery: data.mediaGallery?.length ? data.mediaGallery : [
-      ...photos.map((url: string, i: number) => ({
-        id: i + 1, type: 'image' as const, url, caption: `Photo ${i + 1}`,
-      })),
-      ...(Array.isArray(data.videos) ? data.videos : []).map((url: string, i: number) => ({
-        id: photos.length + i + 1, type: 'video' as const, url, caption: `Video ${i + 1}`,
-      })),
+    locationHighlights: d.connectivityHighlights || d.locationHighlights || [],
+    configurations: Array.isArray(d.configurations) ? d.configurations : d.bedrooms ? [`${d.bedrooms} BHK`] : [],
+    amenities: Array.isArray(d.amenities) ? d.amenities : [],
+    mediaGallery: d.mediaGallery?.length ? d.mediaGallery : [
+      ...photos.map((url: string, j: number) => ({ id: j + 1, type: 'image' as const, url, caption: `Photo ${j + 1}` })),
+      ...(Array.isArray(d.videos) ? d.videos : []).map((url: string, j: number) => ({ id: photos.length + j + 1, type: 'video' as const, url, caption: `Video ${j + 1}` })),
     ],
   };
 }
 
-export default function FeaturedProjects() {
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedProject, setSelectedProject] = useState<FProject | null>(null);
-  const [firestoreProjects, setFirestoreProjects] = useState<FProject[]>([]);
+const LOCS = ['Noida', 'Greater Noida', 'Central Noida', 'Yamuna Expressway'];
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const q = query(collection(db, 'properties'));
-        const snapshot = await getDocs(q);
-        const fetched: FProject[] = snapshot.docs
-          .sort((a, b) => {
-            const aTime = a.data().createdAt?.toMillis?.() ?? 0;
-            const bTime = b.data().createdAt?.toMillis?.() ?? 0;
-            return bTime - aTime;
-          })
-          .slice(0, 12)
-          .map((doc, i) =>
-            firestoreDocToFProject(doc.id, doc.data() as Record<string, any>, 10000 + i)
-          );
-        setFirestoreProjects(fetched);
-      } catch (err) {
-        console.error('FeaturedProjects: Firestore fetch failed:', err);
-      }
-    };
-    fetchProjects();
-  }, []);
-
-  // Only Firestore projects
-  const allProjects: FProject[] = firestoreProjects;
-
-  // Filter projects based on selected category
-  const filteredProjects = selectedCategory === 'All'
-    ? allProjects
-    : allProjects.filter(project => project.category === selectedCategory);
-
+/* ─── CommercialFilterBar ──────────────────────────────────────────────────
+   Row 1: PURPOSE buttons (Lease / Sale)
+   Row 2: SELECT LOCATION grid — slides in when a purpose is chosen
+──────────────────────────────────────────────────────────────────────────── */
+function CommercialFilterBar({
+  purpose, onPurpose,
+  location, onLocation,
+}: {
+  purpose: 'Lease' | 'Sale' | null;
+  onPurpose: (p: 'Lease' | 'Sale') => void;
+  location: string | null;
+  onLocation: (l: string) => void;
+}) {
   return (
-    <section className="w-full py-12 md:py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 md:mb-12">
-          <div>
-            <p className="text-xs sm:text-sm uppercase tracking-widest mb-1.5 md:mb-2" style={{ color: '#C4A35A' }}>CURATED PORTFOLIO</p>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">Featured Projects</h2>
-            <p className="text-slate-600 mt-2 max-w-lg text-sm md:text-base">
-              Hand-picked, RERA-approved residential & commercial projects from India's most trusted developers.
-            </p>
-          </div>
-          
-          {/* Categories */}
-          <div className="flex items-center gap-1.5 md:gap-2 mt-6 md:mt-0 bg-slate-100 p-1 rounded-full overflow-x-auto w-full sm:w-auto">
-            {categories.map(category => (
+    <div style={{ padding: '4px 0 24px', animation: 'slideDown .18s ease' }}>
+
+      {/* ── Row 1: PURPOSE ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <span style={{
+          fontSize: 12, fontWeight: 700, color: '#94a3b8',
+          letterSpacing: '0.08em', textTransform: 'uppercase', marginRight: 4,
+        }}>
+          Purpose:
+        </span>
+
+        {(['Lease', 'Sale'] as const).map(p => (
+          <button
+            key={p}
+            onClick={() => onPurpose(p)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 7,
+              padding: '8px 22px', borderRadius: 999,
+              border: `2px solid ${purpose === p ? '#1a2744' : '#e2e8f0'}`,
+              background: purpose === p ? '#1a2744' : '#fff',
+              color: purpose === p ? '#fff' : '#1a2744',
+              fontWeight: 700, fontSize: 14, cursor: 'pointer',
+              boxShadow: purpose === p ? '0 2px 8px rgba(26,39,68,0.18)' : 'none',
+              transition: 'all .15s',
+            }}
+          >
+            {p === 'Lease' ? (
+              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            ) : (
+              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+            )}
+            {p}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Row 2: SELECT LOCATION — only when a purpose is picked ── */}
+      {purpose && (
+        <div style={{ marginTop: 20, animation: 'slideDown .18s ease' }}>
+          <p style={{
+            margin: '0 0 12px', fontSize: 11, fontWeight: 700,
+            letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8b9bb4',
+          }}>
+            Select Location
+          </p>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            gap: 12,
+          }}>
+            {LOCS.map(l => (
               <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
-                  selectedCategory === category
-                    ? 'bg-slate-900 text-white shadow-md'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+                key={l}
+                onClick={() => onLocation(l)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '14px 18px', borderRadius: 12, cursor: 'pointer',
+                  border: `2px solid ${location === l ? '#1a2744' : '#e2e8f0'}`,
+                  background: location === l ? '#eef1f8' : '#fff',
+                  color: location === l ? '#1a2744' : '#334155',
+                  fontWeight: 600, fontSize: 14,
+                  transition: 'all .15s',
+                  textAlign: 'left',
+                }}
               >
-                {category}
+                <svg
+                  width="17" height="17" fill="none"
+                  stroke={location === l ? '#1a2744' : '#94a3b8'}
+                  strokeWidth="1.8" viewBox="0 0 24 24"
+                  style={{ flexShrink: 0 }}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {l}
               </button>
             ))}
           </div>
         </div>
-
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {filteredProjects.map(project => (
-            <div 
-              key={project.id} 
-              className="group relative bg-white rounded-2xl overflow-hidden border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer"
-              onClick={() => setSelectedProject(project)}
-            >
-              {/* Image */}
-              <div className="relative h-52 sm:h-64 overflow-hidden">
-                <Image
-                  src={project.image}
-                  alt={project.name}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                {/* Exclusive Badge */}
-                {project.isExclusive && (
-                  <div className="absolute top-3 -left-7 transform -rotate-45 text-white font-bold uppercase tracking-wider" style={{ backgroundColor: '#C4A35A', padding: '3px 40px', fontSize: '10px' }}>
-                    Exclusive
-                  </div>
-                )}
-                {/* Category Badge */}
-                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-slate-700 font-medium px-2.5 py-1 rounded-full text-xs">
-                  {project.category}
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-4 md:p-5">
-                <h3 className="text-base md:text-lg font-bold text-slate-900 mb-1 group-hover:text-emerald-700 transition-colors">{project.name}</h3>
-                <div className="flex items-center gap-1 text-slate-500 mb-3">
-                  <svg className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span className="truncate text-sm">{project.location}</span>
-                </div>
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                  <div>
-                    <p className="text-[10px] md:text-xs uppercase tracking-wider text-slate-400">Starting at</p>
-                    <p className="text-sm md:text-base font-bold text-slate-900">{project.price}</p>
-                  </div>
-                  <a
-                    href={`https://wa.me/919667394175?text=${encodeURIComponent(`Hi, I'm interested in ${project.name} at ${project.location}. Please share more details.`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={e => e.stopPropagation()}
-                    className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full transition-colors"
-                    style={{ backgroundColor: '#25D366' }}
-                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#1ebe5d')}
-                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#25D366')}
-                    title="Chat on WhatsApp"
-                  >
-                    <svg className="w-5 h-5 md:w-5 md:h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.476-.884-.785-1.48-1.75-1.653-2.047-.173-.298-.018-.46.13-.608.135-.135.298-.347.446-.52.149-.173.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.488-.5-.67-.51-.172-.01-.371-.015-.57-.015-.198 0-.52.074-.792.371-.27.296-1.029 1.008-1.029 2.455 0 1.447 1.054 2.848 1.2 3.045.149.198 2.096 3.2 5.077 4.487.712.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.041-1.37l-.36-.213-3.641.96 1.01-3.549-.235-.374a9.86 9.86 0 01-1.54-5.215c-.024-5.45 4.44-9.885 9.901-9.885 2.64 0 5.122 1.03 6.982 2.892a9.825 9.825 0 012.88 6.978c0 5.459-4.44 9.89-9.883 9.89z"/>
-                    </svg>
-                  </a>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Project Detail Modal */}
-      {selectedProject && (
-        <ProjectDetail 
-          project={selectedProject as any}
-          onClose={() => setSelectedProject(null)} 
-        />
       )}
-    </section>
+
+      <style>{`@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}`}</style>
+    </div>
   );
 }
 
+/* ─── FeaturedProjects ─────────────────────────────────────────────────── */
+export default function FeaturedProjects() {
+  const [selectedCategory,   setSelectedCategory]   = useState('All');
+  const [selectedProject,    setSelectedProject]    = useState<FProject | null>(null);
+  const [commercialPurpose,  setCommercialPurpose]  = useState<'Lease' | 'Sale' | null>(null);
+  const [commercialLocation, setCommercialLocation] = useState<string | null>(null);
+  const [projects,           setProjects]           = useState<FProject[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const snap = await getDocs(query(collection(db, 'properties')));
+        const list = snap.docs
+          .sort((a, b) => (b.data().createdAt?.toMillis?.() ?? 0) - (a.data().createdAt?.toMillis?.() ?? 0))
+          .slice(0, 12)
+          .map((d, i) => toProject(d.id, d.data() as Record<string, any>, 10000 + i));
+        setProjects(list);
+      } catch (e) { console.error('FeaturedProjects fetch:', e); }
+    })();
+  }, []);
+
+  const filtered = selectedCategory === 'All' ? projects : projects.filter(p => p.category === selectedCategory);
+ 
+  /*
+    KEY CHANGE: return a React fragment <>...</>
+    CommercialModal is rendered AFTER </section>, as a sibling.
+    This means it has NO parent with overflow:hidden, transform, or any
+    stacking context that would break position:fixed.
+  */
+  return (
+    <>
+      <section className="w-full pt-4 pb-12 md:pt-6 md:pb-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 md:mb-12">
+            <div>
+              <p className="text-xs sm:text-sm uppercase tracking-widest mb-1.5 md:mb-2" style={{ color: '#C4A35A' }}>
+                CURATED PORTFOLIO
+              </p>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">Featured Projects</h2>
+              <p className="text-slate-600 mt-2 max-w-lg text-sm md:text-base">
+                Hand-picked, RERA-approved residential &amp; commercial projects from India&apos;s most trusted developers.
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 md:gap-2 mt-6 md:mt-0 bg-slate-100 p-1 rounded-full overflow-x-auto w-full sm:w-auto">
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    if (cat !== 'Commercial') {
+                      setCommercialPurpose(null);
+                      setCommercialLocation(null);
+                    }
+                  }}
+                  className={`px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
+                    selectedCategory === cat ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Inline Lease / Sale filter — only when Commercial tab is active */}
+          {selectedCategory === 'Commercial' && (
+            <CommercialFilterBar
+              purpose={commercialPurpose}
+              onPurpose={p => { setCommercialPurpose(p); setCommercialLocation(null); }}
+              location={commercialLocation}
+              onLocation={setCommercialLocation}
+            />
+          )}
+
+          {/* Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {filtered.map(project => (
+              <div
+                key={project.id}
+                className="group relative bg-white rounded-2xl border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
+                onClick={() => setSelectedProject(project)}
+              >
+                <div className="relative h-52 sm:h-64">
+                  <Image
+                    src={project.image} alt={project.name} fill
+                    sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,25vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  {project.isExclusive && (
+                    <div className="absolute top-3 -left-7 transform -rotate-45 text-white font-bold uppercase tracking-wider"
+                      style={{ backgroundColor: '#C4A35A', padding: '3px 40px', fontSize: 10 }}>
+                      Exclusive
+                    </div>
+                  )}
+                  {project.category === 'Commercial' ? (
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-slate-700 font-semibold px-3 py-1 rounded-full text-xs shadow">
+                      Commercial
+                    </div>
+                  ) : (
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-slate-700 font-medium px-2.5 py-1 rounded-full text-xs">
+                      {project.category}
+                    </div>
+                  )}
+                </div>
+                <div className="p-4 md:p-5">
+                  <h3 className="text-base md:text-lg font-bold text-slate-900 mb-1 group-hover:text-emerald-700 transition-colors">{project.name}</h3>
+                  <div className="flex items-center gap-1 text-slate-500 mb-3">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="truncate text-sm">{project.location}</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-slate-400">Starting at</p>
+                      <p className="text-sm md:text-base font-bold text-slate-900">{project.price}</p>
+                    </div>
+                    <a
+                      href={`https://wa.me/919667394175?text=${encodeURIComponent(`Hi, I'm interested in ${project.name} at ${project.location}. Please share more details.`)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full"
+                      style={{ backgroundColor: '#25D366' }}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#1ebe5d')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#25D366')}
+                    >
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.476-.884-.785-1.48-1.75-1.653-2.047-.173-.298-.018-.46.13-.608.135-.135.298-.347.446-.52.149-.173.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.488-.5-.67-.51-.172-.01-.371-.015-.57-.015-.198 0-.52.074-.792.371-.27.296-1.029 1.008-1.029 2.455 0 1.447 1.054 2.848 1.2 3.045.149.198 2.096 3.2 5.077 4.487.712.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.041-1.37l-.36-.213-3.641.96 1.01-3.549-.235-.374a9.86 9.86 0 01-1.54-5.215c-.024-5.45 4.44-9.885 9.901-9.885 2.64 0 5.122 1.03 6.982 2.892a9.825 9.825 0 012.88 6.978c0 5.459-4.44 9.89-9.883 9.89z" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {selectedProject && <ProjectDetail project={selectedProject as any} onClose={() => setSelectedProject(null)} />}
+    </>
+  );
+}
