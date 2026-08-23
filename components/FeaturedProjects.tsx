@@ -77,7 +77,7 @@ function toProject(docId: string, d: Record<string, any>, i: number): FProject {
   };
 }
 
-const LOCS = ['Noida', 'Greater Noida', 'Central Noida', 'Yamuna Expressway'];
+const LOCS = ['Noida Expressway', 'Greater Noida', 'Central Noida', 'Yamuna Expressway'];
 
 /* ─── CommercialFilterBar ──────────────────────────────────────────────────
    Row 1: PURPOSE buttons (Lease / Sale)
