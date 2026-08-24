@@ -11,6 +11,12 @@ type FProject = {
   firestoreId?: string;
   name: string;
   location: string;
+  /** Raw location fields for filtering */
+  city?: string;
+  locality?: string;
+  projectLocation?: string;
+  /** "Sell" | "Rent / Lease" — from lookingTo field */
+  purpose?: string;
   price: string;
   category: string;
   isExclusive: boolean;
@@ -44,13 +50,28 @@ function toProject(docId: string, d: Record<string, any>, i: number): FProject {
       : a >= 100000 ? `₹${(a / 100000).toFixed(2).replace(/\.?0+$/, '')} Lac onwards`
       : `₹${a.toLocaleString('en-IN')} onwards`;
   } else if (d.price) price = d.price;
-  const cat = d.propertyCategory === 'Commercial' ? 'Commercial'
-    : d.propertyType?.toLowerCase().includes('plot') ? 'Plots'
-    : d.category || 'Residential';
+  // Determine category — check both propertyCategory AND propertyType to handle
+  // all cases from the post-property form (Commercial checkbox + sub-type)
+  const catRaw = d.propertyCategory || d.category || '';
+  const typeRaw = (d.propertyType || d.selectedType || '').toLowerCase();
+  const cat = catRaw === 'Commercial' || typeRaw === 'commercial'
+      || ['office space', 'retail / shop', 'retail/shop', 'commercial land',
+          'warehouse', 'industrial building', 'other'].some(t => typeRaw.includes(t.toLowerCase()))
+    ? 'Commercial'
+    : typeRaw.includes('plot')
+    ? 'Plots'
+    : catRaw || 'Residential';
+
+  const locationStr = (d.projectLocation || d.location || `${d.locality || ''}, ${d.city || 'NCR'}`).replace(/^, |, $/, '');
+
   return {
     id: i, firestoreId: docId,
     name: d.projectName || d.name || `Property in ${d.city || 'NCR'}`,
-    location: (d.projectLocation || d.location || `${d.locality || ''}, ${d.city || 'NCR'}`).replace(/^, |, $/, ''),
+    location: locationStr,
+    city: d.city || '',
+    locality: d.locality || '',
+    projectLocation: d.projectLocation || '',
+    purpose: d.lookingTo || '',
     price, category: cat, isExclusive: false, image, heroImage,
     status: d.availability || d.status || 'Ready to Move',
     launchYear: d.launchYear || String(new Date().getFullYear()),
@@ -183,8 +204,18 @@ function CommercialFilterBar({
   );
 }
 
+interface FeaturedProjectsProps {
+  /** Location string coming from ContinueBrowsing (e.g. "Greater Noida") */
+  externalLocation?: string | null;
+  /** Called when the user clears the location inside this component */
+  onExternalLocationClear?: () => void;
+}
+
 /* ─── FeaturedProjects ─────────────────────────────────────────────────── */
-export default function FeaturedProjects() {
+export default function FeaturedProjects({
+  externalLocation = null,
+  onExternalLocationClear,
+}: FeaturedProjectsProps) {
   const [selectedCategory,   setSelectedCategory]   = useState('All');
   const [selectedProject,    setSelectedProject]    = useState<FProject | null>(null);
   const [commercialPurpose,  setCommercialPurpose]  = useState<'Lease' | 'Sale' | null>(null);
@@ -197,14 +228,61 @@ export default function FeaturedProjects() {
         const snap = await getDocs(query(collection(db, 'properties')));
         const list = snap.docs
           .sort((a, b) => (b.data().createdAt?.toMillis?.() ?? 0) - (a.data().createdAt?.toMillis?.() ?? 0))
-          .slice(0, 12)
+          .slice(0, 16)
           .map((d, i) => toProject(d.id, d.data() as Record<string, any>, 10000 + i));
         setProjects(list);
       } catch (e) { console.error('FeaturedProjects fetch:', e); }
     })();
   }, []);
 
-  const filtered = selectedCategory === 'All' ? projects : projects.filter(p => p.category === selectedCategory);
+  /**
+   * Location keyword map — each button label maps to keywords that appear in
+   * the city / locality / projectLocation / location fields saved to Firestore.
+   */
+  const LOC_KEYWORDS: Record<string, string[]> = {
+    'Noida Expressway':   ['noida expressway', 'noida exp', 'sector 128', 'sector 132', 'sector 137', 'sector 143', 'sector 150'],
+    'Greater Noida':      ['greater noida', 'greater noida west', 'gnida'],
+    'Central Noida':      ['central noida', 'sector 18', 'sector 62', 'sector 63', 'sector 15', 'noida city centre'],
+    'Yamuna Expressway':  ['yamuna expressway', 'yamuna exp', 'jewar', 'agra'],
+  };
+
+  /** Return true if a project's location fields match the selected button label */
+  function matchesLocation(p: FProject, label: string): boolean {
+    const haystack = [p.location, p.city, p.locality, p.projectLocation]
+      .join(' ').toLowerCase();
+    // 1. Direct label keyword match
+    if (LOC_KEYWORDS[label]?.some(kw => haystack.includes(kw))) return true;
+    // 2. Fallback: label words individually (e.g. "Greater Noida")
+    return label.toLowerCase().split(' ').every(word => haystack.includes(word));
+  }
+
+  // The active location filter: externalLocation (from ContinueBrowsing) takes
+  // priority; inside Commercial tab the commercialLocation pill can override it.
+  const activeLocationFilter =
+    selectedCategory === 'Commercial' && commercialLocation
+      ? commercialLocation
+      : externalLocation || null;
+
+  const filtered = projects.filter(p => {
+    // ── Category filter ──────────────────────────────────────────────────
+    if (selectedCategory !== 'All' && p.category !== selectedCategory) return false;
+
+    // ── Commercial sub-filters (only when Commercial tab is active) ──────
+    if (selectedCategory === 'Commercial') {
+      // Purpose filter: "Lease" button → match "Rent / Lease" or "Rent" or "Lease"
+      //                 "Sale" button  → match "Sell" or "Sale"
+      if (commercialPurpose) {
+        const purposeLC = (p.purpose || '').toLowerCase();
+        if (commercialPurpose === 'Lease' && !purposeLC.includes('rent') && !purposeLC.includes('lease')) return false;
+        if (commercialPurpose === 'Sale'  && !purposeLC.includes('sell') && !purposeLC.includes('sale'))  return false;
+      }
+    }
+
+    // ── Location filter — applies to ALL tabs ────────────────────────────
+    if (activeLocationFilter && !matchesLocation(p, activeLocationFilter)) return false;
+
+    return true;
+  });
  
   /*
     KEY CHANGE: return a React fragment <>...</>
@@ -214,7 +292,7 @@ export default function FeaturedProjects() {
   */
   return (
     <>
-      <section className="w-full pt-4 pb-12 md:pt-6 md:pb-16 bg-white">
+      <section id="featured-projects" className="w-full pt-4 pb-12 md:pt-6 md:pb-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Header */}
@@ -227,6 +305,28 @@ export default function FeaturedProjects() {
               <p className="text-slate-600 mt-2 max-w-lg text-sm md:text-base">
                 Hand-picked, RERA-approved residential &amp; commercial projects from India&apos;s most trusted developers.
               </p>
+              {/* Active location pill — shown when an external location is active */}
+              {externalLocation && (
+                <div className="flex items-center gap-2 mt-3">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+                    style={{ background: '#eef1f8', color: '#1a2744', border: '1.5px solid #1a2744' }}>
+                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {externalLocation}
+                    <button
+                      onClick={() => onExternalLocationClear?.()}
+                      className="ml-1 hover:opacity-70 transition-opacity"
+                      aria-label="Clear location filter"
+                    >
+                      <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-1.5 md:gap-2 mt-6 md:mt-0 bg-slate-100 p-1 rounded-full overflow-x-auto w-full sm:w-auto">
               {categories.map(cat => (
@@ -261,7 +361,34 @@ export default function FeaturedProjects() {
 
           {/* Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {filtered.map(project => (
+            {filtered.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-16 text-slate-400">
+                <svg className="w-12 h-12 mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <p className="text-base font-semibold text-slate-500">No projects found</p>
+                <p className="text-sm mt-1">
+                  {activeLocationFilter
+                    ? `No properties available in "${activeLocationFilter}" for the selected filters.`
+                    : 'No properties match the selected filters.'}
+                </p>
+                {(activeLocationFilter || commercialPurpose) && (
+                  <button
+                    onClick={() => {
+                      onExternalLocationClear?.();
+                      setCommercialPurpose(null);
+                      setCommercialLocation(null);
+                    }}
+                    className="mt-4 px-4 py-2 rounded-full text-sm font-semibold transition-all"
+                    style={{ background: '#1a2744', color: '#fff' }}
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+            ) : (
+              filtered.map(project => (
               <div
                 key={project.id}
                 className="group relative bg-white rounded-2xl border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
@@ -319,7 +446,24 @@ export default function FeaturedProjects() {
                   </div>
                 </div>
               </div>
-            ))}
+            ))
+            )}
+          </div>
+
+          {/* ── Show More button ── */}
+          <div className="flex justify-center mt-10 md:mt-12">
+            <a
+              href="/projects"
+              className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full text-sm font-semibold transition-all duration-200 hover:shadow-lg active:scale-95"
+              style={{ background: '#1a2744', color: '#fff' }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#2d3f6e')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#1a2744')}
+            >
+              Show More Properties
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </a>
           </div>
         </div>
       </section>

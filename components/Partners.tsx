@@ -37,8 +37,8 @@ const scaleMap: Record<string, number> = {
 
 export default function Partners() {
   return (
-     <section className="w-full py-4 bg-white border-y border-gray-200">
-      <div className="text-center mb-4">
+     <section className="w-full py-2 bg-white border-y border-gray-200">
+      <div className="text-center mb-2">
         <h2 className="text-sm uppercase tracking-widest font-semibold" style={{ color: '#1a2744' }}>Our Trusted Developer Partners</h2>
       </div>
       <div className="overflow-hidden">

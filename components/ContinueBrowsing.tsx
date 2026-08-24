@@ -1,24 +1,37 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRef } from 'react';
 
 const NAVY = '#1a2744';
 
+// Maps button label → the location keyword FeaturedProjects understands
 const tabs = [
-  { label: 'Buy in Noida', query: 'buy-noida' },
-  { label: 'Buy in Greater Noida', query: 'buy-greater-noida' },
-  { label: 'Buy in Central Noida', query: 'buy-central-noida' },
-  { label: 'Buy on Yamuna Expressway', query: 'buy-yamuna-expressway' },
+  { label: 'Buy in Noida',           location: 'Central Noida'      },
+  { label: 'Buy in Greater Noida',   location: 'Greater Noida'      },
+  { label: 'Buy in Central Noida',   location: 'Central Noida'      },
+  { label: 'Buy on Yamuna Expressway', location: 'Yamuna Expressway' },
 ];
 
-export default function ContinueBrowsing() {
-  const [active, setActive] = useState<string | null>(null);
-  const router = useRouter();
+interface Props {
+  activeLocation: string | null;
+  onLocationChange: (loc: string | null) => void;
+}
 
-  const handleClick = (tab: typeof tabs[0]) => {
-    setActive(tab.query);
-    router.push('/projects');
+export default function ContinueBrowsing({ activeLocation, onLocationChange }: Props) {
+  const featuredRef = useRef<HTMLElement | null>(null);
+
+  const handleClick = (location: string) => {
+    // Toggle — clicking the same button again clears the filter
+    const next = activeLocation === location ? null : location;
+    onLocationChange(next);
+
+    // Smooth-scroll to the FeaturedProjects section after a short tick
+    if (next) {
+      setTimeout(() => {
+        const el = document.getElementById('featured-projects');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+    }
   };
 
   return (
@@ -26,13 +39,16 @@ export default function ContinueBrowsing() {
       <div className="max-w-7xl mx-auto">
         <p className="text-xs font-semibold text-gray-400 mb-3 tracking-wide">Continue browsing...</p>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div
+          className="flex items-center gap-2 overflow-x-auto pb-1"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
           {tabs.map((tab) => {
-            const isActive = active === tab.query;
+            const isActive = activeLocation === tab.location;
             return (
               <button
-                key={tab.query}
-                onClick={() => handleClick(tab)}
+                key={tab.label}
+                onClick={() => handleClick(tab.location)}
                 className="flex items-center gap-2 px-4 py-2 rounded-full border text-sm transition-all whitespace-nowrap"
                 style={{
                   borderColor: isActive ? NAVY : '#e5e7eb',

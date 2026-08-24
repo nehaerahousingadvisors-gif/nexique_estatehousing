@@ -651,7 +651,8 @@ export default function PostPropertyPage() {
         // Admin
         userId: user.uid,
         userEmail: user.email,
-        source: 'user_submission',
+        source: ['info@nexiqueestate.com','admin@nexiqueestate.com','nehaerhousingadvisors@gmail.com']
+          .includes((user.email ?? '').toLowerCase()) ? 'admin' : 'user_submission',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
