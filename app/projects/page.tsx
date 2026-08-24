@@ -305,8 +305,11 @@ function ProjectsContent() {
     if (selectedCategory === 'Commercial') {
       if (commercialPurpose) {
         const pl = (project.purpose || '').toLowerCase();
-        if (commercialPurpose === 'Lease' && !pl.includes('rent') && !pl.includes('lease')) return false;
-        if (commercialPurpose === 'Sale'  && !pl.includes('sell') && !pl.includes('sale'))  return false;
+        // Empty purpose = no tag → show in BOTH Lease and Sale tabs
+        if (pl !== '') {
+          if (commercialPurpose === 'Lease' && !pl.includes('rent') && !pl.includes('lease')) return false;
+          if (commercialPurpose === 'Sale'  && !pl.includes('sell') && !pl.includes('sale'))  return false;
+        }
       }
       if (commercialLocation) {
         if (!matchesLocation(project, commercialLocation as LocLabel)) return false;
@@ -449,6 +452,18 @@ function ProjectsContent() {
                     <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-slate-700 font-medium px-2.5 py-1 rounded-full text-xs">
                       {project.category}
                     </div>
+                    {/* Lease / Sale badge — top-left, only when purpose is set */}
+                    {project.purpose && (
+                      <div
+                        className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
+                        style={{
+                          backgroundColor: project.purpose.toLowerCase().includes('sell') ? '#1a2744' : '#059669',
+                          color: '#fff',
+                        }}
+                      >
+                        {project.purpose.toLowerCase().includes('sell') ? 'Sale' : 'Lease'}
+                      </div>
+                    )}
                     <div className="absolute bottom-3 left-3 backdrop-blur-sm text-white font-medium px-2.5 py-1 rounded-full text-[10px]"
                       style={{ backgroundColor: 'rgba(26,39,68,0.9)' }}>
                       {project.status}

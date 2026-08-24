@@ -273,12 +273,13 @@ export default function FeaturedProjects({
 
     // ── Commercial sub-filters (only when Commercial tab is active) ──────
     if (selectedCategory === 'Commercial') {
-      // Purpose filter: "Lease" button → match "Rent / Lease" or "Rent" or "Lease"
-      //                 "Sale" button  → match "Sell" or "Sale"
       if (commercialPurpose) {
         const purposeLC = (p.purpose || '').toLowerCase();
-        if (commercialPurpose === 'Lease' && !purposeLC.includes('rent') && !purposeLC.includes('lease')) return false;
-        if (commercialPurpose === 'Sale'  && !purposeLC.includes('sell') && !purposeLC.includes('sale'))  return false;
+        // Empty purpose = property has no Lease/Sale tag → show in BOTH tabs
+        if (purposeLC !== '') {
+          if (commercialPurpose === 'Lease' && !purposeLC.includes('rent') && !purposeLC.includes('lease')) return false;
+          if (commercialPurpose === 'Sale'  && !purposeLC.includes('sell') && !purposeLC.includes('sale'))  return false;
+        }
       }
     }
 
@@ -419,6 +420,18 @@ export default function FeaturedProjects({
                   ) : (
                     <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-slate-700 font-medium px-2.5 py-1 rounded-full text-xs">
                       {project.category}
+                    </div>
+                  )}
+                  {/* Lease / Sale badge — top-left */}
+                  {project.purpose && (
+                    <div
+                      className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
+                      style={{
+                        backgroundColor: project.purpose.toLowerCase().includes('sell') ? '#1a2744' : '#059669',
+                        color: '#fff',
+                      }}
+                    >
+                      {project.purpose.toLowerCase().includes('sell') ? 'Sale' : 'Lease'}
                     </div>
                   )}
                 </div>

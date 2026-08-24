@@ -32,6 +32,7 @@ export default function AddProjectPage() {
   // ── Form fields ──────────────────────────────────────────────────────────
   const [name,         setName]         = useState('');
   const [category,     setCategory]     = useState<'Residential' | 'Commercial' | 'Plots' | 'Luxury Residential'>('Residential');
+  const [lookingTo,    setLookingTo]    = useState<'Sell' | 'Rent / Lease' | ''>('');
   const [location,     setLocation]     = useState('');
   const [city,         setCity]         = useState('');
   const [developer,    setDeveloper]    = useState('');
@@ -120,6 +121,7 @@ export default function AddProjectPage() {
       await addDoc(collection(db, 'properties'), {
         // Identification
         source:        'admin',
+        lookingTo:     lookingTo,
         // Display
         projectName:   name.trim(),
         name:          name.trim(),
@@ -236,6 +238,33 @@ export default function AddProjectPage() {
                     <option key={c}>{c}</option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+                  Purpose <span className="normal-case font-normal text-slate-400">(Lease/Sale filter)</span>
+                </label>
+                <div className="flex gap-2">
+                  {(['Rent / Lease', 'Sell'] as const).map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setLookingTo(lookingTo === opt ? '' : opt)}
+                      className="flex-1 px-3 py-2.5 rounded-xl border text-sm font-semibold transition-all"
+                      style={{
+                        borderColor:     lookingTo === opt ? PRIMARY : '#e2e8f0',
+                        backgroundColor: lookingTo === opt ? PRIMARY : 'white',
+                        color:           lookingTo === opt ? '#fff'   : '#64748b',
+                        borderWidth:     lookingTo === opt ? 2 : 1,
+                      }}
+                    >
+                      {opt === 'Sell' ? '🏷️ Sale' : '🏠 Lease / Rent'}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-400 mt-1.5">
+                  If left blank, property appears in both Lease and Sale tabs.
+                </p>
               </div>
 
               <div>
