@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import ProjectDetail from './ProjectDetail';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -216,6 +217,8 @@ export default function FeaturedProjects({
   externalLocation = null,
   onExternalLocationClear,
 }: FeaturedProjectsProps) {
+  const router = useRouter();
+
   const [selectedCategory,   setSelectedCategory]   = useState('All');
   const [selectedProject,    setSelectedProject]    = useState<FProject | null>(null);
   const [commercialPurpose,  setCommercialPurpose]  = useState<'Lease' | 'Sale' | null>(null);
@@ -227,6 +230,7 @@ export default function FeaturedProjects({
       try {
         const snap = await getDocs(query(collection(db, 'properties')));
         const list = snap.docs
+          .filter(d => (d.data().source ?? 'admin') !== 'user_submission')
           .sort((a, b) => (b.data().createdAt?.toMillis?.() ?? 0) - (a.data().createdAt?.toMillis?.() ?? 0))
           .slice(0, 16)
           .map((d, i) => toProject(d.id, d.data() as Record<string, any>, 10000 + i));
@@ -333,11 +337,13 @@ export default function FeaturedProjects({
                 <button
                   key={cat}
                   onClick={() => {
-                    setSelectedCategory(cat);
-                    if (cat !== 'Commercial') {
-                      setCommercialPurpose(null);
-                      setCommercialLocation(null);
+                    if (cat === 'Commercial') {
+                      router.push('/projects?type=Commercial');
+                      return;
                     }
+                    setSelectedCategory(cat);
+                    setCommercialPurpose(null);
+                    setCommercialLocation(null);
                   }}
                   className={`px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
                     selectedCategory === cat ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:text-slate-900'
