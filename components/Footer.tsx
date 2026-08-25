@@ -121,7 +121,7 @@ export default function Footer() {
               ) : footerProjects.length === 0 ? (
                 <li className="text-gray-400 text-xs">Loading...</li>
               ) : (
-                footerProjects.slice(0, 12).map(({ id, name }) => (
+                footerProjects.slice(0, 5).map(({ id, name }) => (
                   <li key={id}>
                     <Link
                       href={`/projects?id=${id}`}
@@ -132,7 +132,7 @@ export default function Footer() {
                   </li>
                 ))
               )}
-              {mounted && footerProjects.length > 12 && (
+              {mounted && footerProjects.length > 5 && (
                 <li>
                   <Link href="/projects" className="text-xs font-semibold" style={{ color: NAVY }}>
                     View All →
