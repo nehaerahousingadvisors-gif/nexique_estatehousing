@@ -75,7 +75,7 @@ export default function AdminPage() {
   // ── Fetch all properties ─────────────────────────────────────────────────
   useEffect(() => {
     if (!isAdmin) return;
-    setLoading(true);
+    setLoading(true); 
     (async () => {
       try {
         const snap = await getDocs(query(collection(db, 'properties')));
