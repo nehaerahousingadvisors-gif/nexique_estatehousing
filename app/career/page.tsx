@@ -1,6 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { collection, addDoc } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '@/lib/firebase';
+
+const PRIMARY = '#1a2744';
 
 export default function CareerPage() {
   const [formData, setFormData] = useState({
@@ -12,6 +17,12 @@ export default function CareerPage() {
     experience: '',
     message: '',
   });
+  const [resumeFile,    setResumeFile]    = useState<File | null>(null);
+  const [uploading,     setUploading]     = useState(false);
+  const [uploadPct,     setUploadPct]     = useState(0);
+  const [submitted,     setSubmitted]     = useState(false);
+  const [error,         setError]         = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const benefits = [
     {
@@ -80,9 +91,94 @@ export default function CareerPage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setResumeFile(file);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Application submitted:', formData);
+    setUploading(true);
+    setError('');
+    setUploadPct(0);
+
+    try {
+      let resumeUrl = '';
+      let resumeName = '';
+
+      // ── Upload resume to Firebase Storage ───────────────────────
+      if (resumeFile) {
+        resumeName = resumeFile.name;
+        const storageRef = ref(
+          storage,
+          `careers/${Date.now()}_${resumeFile.name.replace(/\s+/g, '_')}`,
+        );
+        await new Promise<void>((resolve, reject) => {
+          const task = uploadBytesResumable(storageRef, resumeFile);
+          task.on(
+            'state_changed',
+            snap => setUploadPct(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
+            reject,
+            async () => {
+              resumeUrl = await getDownloadURL(task.snapshot.ref);
+              resolve();
+            },
+          );
+        });
+      }
+
+      // ── Save application to Firestore ────────────────────────────
+      await addDoc(collection(db, 'careers'), {
+        firstName:   formData.firstName.trim(),
+        lastName:    formData.lastName.trim(),
+        email:       formData.email.trim(),
+        phone:       formData.phone.trim(),
+        designation: formData.designation.trim(),
+        experience:  formData.experience.trim(),
+        message:     formData.message.trim(),
+        resumeUrl,
+        resumeName,
+        createdAt:   new Date().toISOString(),
+        status:      'new',
+      });
+
+      // ── Send email notification to info@nexiqueestate.com ────────
+      try {
+        await fetch('/api/career-apply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firstName:   formData.firstName.trim(),
+            lastName:    formData.lastName.trim(),
+            email:       formData.email.trim(),
+            phone:       formData.phone.trim(),
+            designation: formData.designation.trim(),
+            experience:  formData.experience.trim(),
+            message:     formData.message.trim(),
+            resumeUrl,
+            resumeName,
+          }),
+        });
+      } catch (emailErr) {
+        // Email failure should not block success — application is already saved
+        console.warn('Email notification failed:', emailErr);
+      }
+
+      setSubmitted(true);
+      setFormData({ firstName: '', lastName: '', email: '', phone: '', designation: '', experience: '', message: '' });
+      setResumeFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch (err: any) {
+      console.error('Career form error:', err);
+      setError(
+        err?.code === 'permission-denied'
+          ? 'Permission denied. Please contact us at info@nexiqueestate.com'
+          : 'Something went wrong. Please try again.',
+      );
+    } finally {
+      setUploading(false);
+      setUploadPct(0);
+    }
   };
 
   return (
@@ -159,6 +255,29 @@ export default function CareerPage() {
               <p className="text-slate-600 text-sm mb-6">Fill in your details and upload your CV.</p>
 
               <form onSubmit={handleSubmit} className="space-y-5">
+
+                {/* Success */}
+                {submitted && (
+                  <div className="flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-2xl">
+                    <svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-semibold text-green-800">Application submitted successfully!</p>
+                      <p className="text-xs text-green-600 mt-0.5">We'll review your application and get back to you soon.</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Error */}
+                {error && (
+                  <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl">
+                    <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
                     <label htmlFor="firstName" className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
@@ -270,20 +389,50 @@ export default function CareerPage() {
 
                 {/* Resume Upload */}
                 <div>
-                  <label htmlFor="resume" className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
                     UPLOAD RESUME
                   </label>
-                  <div className="w-full px-4 py-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl text-center cursor-pointer transition-colors" onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#1a2744')} onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}>
-                    <svg className="w-6 h-6 mx-auto mb-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <p className="text-sm text-slate-500">Choose PDF / DOCX</p>
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full px-4 py-6 bg-slate-50 border-2 border-dashed rounded-2xl text-center cursor-pointer transition-all"
+                    style={{ borderColor: resumeFile ? PRIMARY : '#e2e8f0' }}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = PRIMARY)}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = resumeFile ? PRIMARY : '#e2e8f0')}
+                  >
+                    {resumeFile ? (
+                      <div className="flex items-center justify-center gap-3">
+                        <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke={PRIMARY} strokeWidth={1.8} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <div className="text-left">
+                          <p className="text-sm font-semibold" style={{ color: PRIMARY }}>{resumeFile.name}</p>
+                          <p className="text-xs text-slate-400">{(resumeFile.size / 1024).toFixed(0)} KB · Click to change</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={e => { e.stopPropagation(); setResumeFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                          className="ml-2 text-slate-400 hover:text-red-500 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <svg className="w-6 h-6 mx-auto mb-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <p className="text-sm text-slate-500">Choose PDF / DOCX</p>
+                        <p className="text-xs text-slate-400 mt-1">Max 10MB</p>
+                      </>
+                    )}
                     <input
+                      ref={fileInputRef}
                       type="file"
-                      id="resume"
-                      name="resume"
                       accept=".pdf,.docx,.doc"
                       className="hidden"
+                      onChange={handleFileChange}
                     />
                   </div>
                 </div>
@@ -306,15 +455,30 @@ export default function CareerPage() {
 
                 <button
                   type="submit"
-                  className="w-full py-4 text-white font-semibold rounded-full transition-all flex items-center justify-center gap-2 shadow-lg"
-                  style={{ backgroundColor: '#1a2744' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#131e36')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#1a2744')}
+                  disabled={uploading}
+                  className="w-full py-4 text-white font-semibold rounded-full transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: PRIMARY }}
+                  onMouseEnter={e => { if (!uploading) (e.currentTarget.style.backgroundColor = '#131e36'); }}
+                  onMouseLeave={e => { if (!uploading) (e.currentTarget.style.backgroundColor = PRIMARY); }}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                  Submit Application 
+                  {uploading ? (
+                    <>
+                      <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      {uploadPct > 0 && uploadPct < 100
+                        ? `Uploading resume... ${uploadPct}%`
+                        : 'Submitting...'}
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                      Submit Application
+                    </>
+                  )}
                 </button> 
               </form>
             </div>

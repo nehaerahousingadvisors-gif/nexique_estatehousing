@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const NAVY = '#1a2744';
 const NAVY_DARK = '#131e36';
@@ -13,15 +15,43 @@ export default function ContactPage() {
     propertyType: '',
     message: ''
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    setSubmitting(true);
+    setError('');
+    try {
+      await addDoc(collection(db, 'contacts'), {
+        name:         formData.name.trim(),
+        email:        formData.email.trim(),
+        phone:        formData.phone.trim(),
+        propertyType: formData.propertyType,
+        message:      formData.message.trim(),
+        createdAt:    new Date().toISOString(),
+        read:         false,
+        source:       'contact_form',
+      });
+      setSubmitted(true);
+      setFormData({ name: '', email: '', phone: '', propertyType: '', message: '' });
+    } catch (err: any) {
+      console.error('Contact form error:', err?.code, err?.message);
+      // Permission denied = Firestore rules blocking unauthenticated writes
+      if (err?.code === 'permission-denied' || err?.message?.includes('permission')) {
+        setError('Permission error — please contact us directly at info@nexiqueestate.com or +91 96673 94175');
+      } else {
+        setError('Something went wrong. Please try again or call us at +91 96673 94175.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -132,6 +162,28 @@ export default function ContactPage() {
               <p className="text-slate-600 text-sm mb-6">We'll respond within 24 hours.</p>
 
               <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Success message */}
+                {submitted && (
+                  <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-2xl">
+                    <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-semibold text-green-800">Message sent successfully!</p>
+                      <p className="text-xs text-green-600 mt-0.5">We'll get back to you within 24 hours.</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Error message */}
+                {error && (
+                  <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl">
+                    <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
                     <label htmlFor="name" className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
@@ -214,15 +266,28 @@ export default function ContactPage() {
 
                 <button
                   type="submit"
-                  className="w-full py-4 text-white font-semibold rounded-full transition-all flex items-center justify-center gap-2 shadow-lg"
+                  disabled={submitting}
+                  className="w-full py-4 text-white font-semibold rounded-full transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
                   style={{ backgroundColor: NAVY }}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = NAVY_DARK)}
-                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = NAVY)}
+                  onMouseEnter={e => { if (!submitting) (e.currentTarget.style.backgroundColor = NAVY_DARK); }}
+                  onMouseLeave={e => { if (!submitting) (e.currentTarget.style.backgroundColor = NAVY); }}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                  Send Message
+                  {submitting ? (
+                    <>
+                      <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                      Send Message
+                    </>
+                  )}
                 </button>
               </form>
             </div>
