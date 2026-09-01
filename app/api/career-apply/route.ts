@@ -6,11 +6,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { firstName, lastName, email, phone, designation, experience, message, resumeName, resumeUrl } = body;
 
+    // Hostinger SMTP transporter
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.hostinger.com',
+      port: 465,
+      secure: true, // SSL
       auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD,
+        user: process.env.HOSTINGER_EMAIL,   // e.g. info@yourdomain.com
+        pass: process.env.HOSTINGER_PASSWORD, // Hostinger email password
       },
     });
 
@@ -45,8 +48,8 @@ export async function POST(req: NextRequest) {
     `;
 
     await transporter.sendMail({
-      from:    `"Nexique Estate Careers" <${process.env.GMAIL_USER}>`,
-      to:      'info@nexiqueestate.com',
+      from:    `"Nexique Estate Careers" <${process.env.HOSTINGER_EMAIL}>`,
+      to:      process.env.HOSTINGER_EMAIL, // apni Hostinger mail pe aayega
       replyTo: email,
       subject: `New Application: ${designation || 'Job Application'} — ${firstName} ${lastName}`,
       html,

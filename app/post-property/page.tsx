@@ -1487,8 +1487,6 @@ export default function PostPropertyPage() {
                         { label: 'Inventory Type', value: inventoryType, set: setInventoryType, placeholder: 'e.g. Exclusive Available Residence' },
                         { label: 'Project Name', value: projectName, set: setProjectName, placeholder: 'e.g. Vaastu Homes' },
                         { label: 'Developer', value: developerName, set: setDeveloperName, placeholder: 'e.g. Vaastu Builders' },
-                        { label: 'Location', value: projectLocation, set: setProjectLocation, placeholder: 'e.g. Siddharth Vihar, Ghaziabad' },
-                        { label: 'Project Land Area', value: landArea, set: setLandArea, placeholder: 'e.g. Approx. 5 Acres' },
                         { label: 'Total Towers', value: totalTowers, set: setTotalTowers, placeholder: 'e.g. 3 Towers' },
                         { label: 'Total Residences', value: totalResidences, set: setTotalResidences, placeholder: 'e.g. 250 Residences' },
                         { label: 'RERA Number', value: reraNumber, set: setReraNumber, placeholder: 'e.g. UPRERAPRJ123456/2024' },

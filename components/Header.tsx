@@ -113,8 +113,8 @@ export default function Header() {
               className="flex items-center"
             >
               <Image
-                src="/15august.png"
-                alt="NEHA - New Era Housing Advisors"
+                src="/clogo.png"
+                alt="Nexique Estate Housing Advisors"
                 width={200}
                 height={200}
                 className="h-12 sm:h-16 w-auto"
