@@ -1,129 +1,261 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import { useRef, useEffect, useState } from 'react';
+import { useState, useRef } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+  useMotionValueEvent,
+  useSpring,
+  type MotionValue,
+} from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 
-interface WorkItem {
-  id: number;
-  image?: string;
-  video?: string;
-  title: string;
-  category: string;
-  hasLink?: boolean;
-}
-
-const workItems: WorkItem[] = [
-  { id: 1, image: '/f1.png',  title: 'SMART WORLD', category: '' },
-  { id: 2, image: '/f2.jpg',  title: 'SMART WORLD', category: '' },
-  { id: 3, video: '/v1.mp4',  title: 'SMART WORLD', category: '', hasLink: true },
-  { id: 4, image: '/f1.png',  title: 'SMART WORLD', category: '' },
-  { id: 5, image: '/f2.jpg',  title: 'SMART WORLD', category: '' },
-  { id: 6, image: '/f1.png',  title: 'SMART WORLD', category: '' },
+const works = [
+  {
+    id: 1,
+    title: "SMART WORLD",
+    category: "PREMIUM RESIDENCES",
+    src: "/sm.png",
+    color: "text-blue-400",
+    website: "/projects",
+  },
+  {
+    id: 2,
+    title: "M3M INDIA",
+    category: "LUXURY PROJECTS",
+    src: "/image copy 9.png",
+    color: "text-orange-500",
+    website: "/projects",
+  },
+  {
+    id: 3,
+    title: "DASNAC ARC",
+    category: "COMMERCIAL SPACES",
+    src: "/image copy 4.png",
+    color: "text-yellow-500",
+    website: "/projects",
+  },
+  {
+    id: 4,
+    title: "ATS GROUP",
+    category: "RESIDENTIAL PROJECTS",
+    src: "/image copy 12.png",
+    color: "text-green-400",
+    website: "/projects",
+  },
+  {
+    id: 5,
+    title: "MAX ESTATES",
+    category: "PREMIUM LIVING",
+    src: "/image copy 13.png",
+    color: "text-purple-500",
+    website: "/projects",
+  },
 ];
 
-export default function FeaturedWork() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const [rotation, setRotation] = useState(0);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
+// ── CarouselItem ────────────────────────────────────────────────────────────
+function CarouselItem({
+  work,
+  index,
+  rotation,
+  total,
+  isActive,
+}: {
+  work: (typeof works)[0];
+  index: number;
+  rotation: MotionValue<number>;
+  total: number;
+  isActive: boolean;
+}) {
+  const angleStep = 360 / total;
+  const radius = 260;
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % workItems.length);
-    }, 2500);
-    return () => clearInterval(interval);
-  }, []);
+  const theta = useTransform(rotation, (r) => (index - r) * angleStep);
+  const x = useTransform(theta, (t) => radius * Math.sin(t * (Math.PI / 180)));
+  const z = useTransform(theta, (t) => radius * Math.cos(t * (Math.PI / 180)));
+  const rotateY = useTransform(theta, (t) => t);
 
-  useEffect(() => {
-    const anglePerItem = 360 / workItems.length;
-    setRotation(currentIndex * anglePerItem);
-  }, [currentIndex]);
+  const opacity = useTransform(theta, (t) => {
+    let norm = t % 360;
+    if (norm > 180) norm -= 360;
+    if (norm < -180) norm += 360;
+    return Math.abs(norm) > 90 ? 0.6 : 1;
+  });
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const radius = isMobile ? 150 : 280;
+  const scale = useTransform(theta, (t) => {
+    let norm = t % 360;
+    if (norm > 180) norm -= 360;
+    if (norm < -180) norm += 360;
+    const dist = Math.abs(norm);
+    if (dist > 90) return 0.85;
+    return 1.1 - (dist / 90) * 0.25;
+  });
 
   return (
-    <section ref={sectionRef} className="w-full py-10 overflow-hidden relative" style={{ backgroundColor: '#1a2744' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-        <div className="text-center">
-          <h3 className="text-2xl sm:text-4xl md:text-6xl font-bold text-white mb-2">15 AUGUST</h3>
-          <h2 className="text-2xl sm:text-4xl md:text-6xl font-bold">
-            <span style={{ color: '#FF9933' }}>Happy </span>
-            <span className="text-white">Independence </span>
-            <span style={{ color: '#138808' }}>Day</span>
-          </h2>
-        </div>
-      </div>
+    <motion.div
+      style={{ x, z, rotateY, opacity, scale }}
+      suppressHydrationWarning
+      className="absolute left-1/2 top-1/2 w-[220px] md:w-[280px] aspect-[2/3] rounded-xl overflow-hidden border border-white/10 shadow-2xl -ml-[110px] -mt-[165px] md:-ml-[140px] md:-mt-[210px]"
+      // preserve-3d via inline style to avoid Tailwind purge issues
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      {...({ style: { x, z, rotateY, opacity, scale, transformStyle: "preserve-3d", backgroundColor: '#1a2744' } } as any)}
+    >
+      <Link href={`/projects?highlight=${work.id}`} className="block w-full h-full">
+        <div className="w-full h-full relative">
+          <Image
+            src={work.src}
+            alt={work.title}
+            fill
+            className="object-cover"
+            priority={isActive}
+            sizes="(max-width: 768px) 220px, 280px"
+          />
 
-      <div
-        className="relative w-full h-[320px] sm:h-[500px] md:h-[600px] flex items-center justify-center"
-        style={{ perspective: '1500px', perspectiveOrigin: '50% 50%' }}
-      >
+          {/* Gradient */}
+          <div
+            className={`absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent transition-opacity duration-300 ${
+              isActive ? "opacity-60" : "opacity-80"
+            }`}
+          />
+
+          {/* Title on active card */}
+          <div
+            className={`absolute bottom-6 left-0 w-full text-center transition-all duration-300 ${
+              isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+            }`}
+          >
+            <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tighter drop-shadow-2xl px-2">
+              {work.title}
+            </h2>
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
+// ── Main component ──────────────────────────────────────────────────────────
+export default function FeaturedWork() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [activeId, setActiveId] = useState(works[0].id);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"],
+  });
+
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
+
+  const rotationIndex = useTransform(
+    smoothProgress,
+    [0, 1],
+    [0, works.length - 1]
+  );
+
+  useMotionValueEvent(rotationIndex, "change", (latest) => {
+    const idx = Math.round(latest);
+    const safe = Math.max(0, Math.min(idx, works.length - 1));
+    if (works[safe].id !== activeId) setActiveId(works[safe].id);
+  });
+
+  const activeWork = works.find((w) => w.id === activeId) ?? works[0];
+
+  return (
+    /* Tall container — 200 vh gives scroll room */
+    <div ref={containerRef} id="works" className="relative h-[200vh] z-10" style={{ backgroundColor: '#1a2744' }}>
+      {/* Sticky viewport */}
+      <div className="sticky top-0 h-screen overflow-hidden flex flex-col items-center justify-center">
+
+        {/* Header */}
+        <div className="absolute top-20 left-0 w-full flex flex-col items-center z-20 pointer-events-none">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-lime-400 text-lg font-light">¬</span>
+            <span className="text-xs font-bold tracking-[0.3em] text-white/60 uppercase">
+              TOP
+            </span>
+          </div>
+          <h1 className="text-5xl md:text-7xl font-medium text-white tracking-tighter select-none">
+            PROJECT
+          </h1>
+        </div>
+
+        {/* 3-D Carousel */}
         <div
-          className="absolute"
-          style={{
-            transform: `rotateY(${-rotation}deg)`,
-            transformStyle: 'preserve-3d',
-            width: '100%',
-            height: '100%',
-            transition: 'transform 1s ease-in-out',
-          }}
+          className="relative w-full h-[400px] md:h-[600px] flex items-center justify-center z-10 mt-24"
+          style={{ perspective: "1000px" }}
         >
-          {workItems.map((item, index) => {
-            const angle = (360 / workItems.length) * index;
-            const radians = (angle * Math.PI) / 180;
-            return (
-              <div
-                key={item.id}
-                className="absolute top-1/2 left-1/2"
-                style={{
-                  transform: `translate(-50%, -50%) rotateY(${angle}deg) translateZ(${radius}px)`,
-                  transformStyle: 'preserve-3d',
-                }}
+          <div
+            className="relative w-full h-full flex items-center justify-center"
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            {works.map((work, index) => (
+              <CarouselItem
+                key={work.id}
+                work={work}
+                index={index}
+                rotation={rotationIndex}
+                total={works.length}
+                isActive={work.id === activeId}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom controls */}
+        <div className="relative z-20 flex flex-col items-center gap-3 mt-4">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeWork.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="px-5 py-1.5 border border-white/20 rounded-full bg-white/5 backdrop-blur-sm"
+            >
+              <span className="text-xs font-medium text-white tracking-widest uppercase">
+                {activeWork.category}
+              </span>
+            </motion.div>
+          </AnimatePresence>
+
+          <AnimatePresence mode="wait">
+            {activeWork.website && (
+              <motion.div
+                key={`website-${activeWork.id}`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="mb-1"
               >
-                <div className="relative w-[120px] sm:w-[200px] md:w-[280px] h-[180px] sm:h-[280px] md:h-[360px]">
-                  <div className="absolute inset-0 rounded-2xl overflow-hidden border border-white/10">
-                    {item.video ? (
-                      <video
-                        src={item.video}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Image src={item.image!} alt={item.title} fill sizes="280px" className="object-contain" />
-                    )}
-                  </div>
-                  <div className="absolute -bottom-6 sm:-bottom-8 left-1/2 transform -translate-x-1/2 z-10">
-                    <div className="bg-white/10 backdrop-blur-sm border border-white/20 px-2 sm:px-4 py-0.5 sm:py-1 rounded-full">
-                      <p className="text-white font-medium text-[10px] sm:text-xs md:text-sm">{item.category}</p>
-                    </div>
-                    {item.hasLink && (
-                      <button className="mt-2 w-full bg-white text-black font-bold px-4 py-1.5 rounded-full flex items-center justify-center gap-1.5 hover:bg-gray-200 transition-colors text-xs">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                <a
+                  href={activeWork.website}
+                  className="flex items-center gap-2 px-5 py-2 bg-white text-black rounded-full text-xs font-bold tracking-wider uppercase hover:bg-gray-200 transition-colors"
+                >
+                  <span>Visit Official Website</span>
+                  <ArrowUpRight className="w-3 h-3" />
+                </a>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <Link
+            href="/projects"
+            className="flex items-center gap-2 text-white/40 text-[10px] tracking-widest uppercase hover:text-white transition-colors group"
+          >
+            <span>Explore Projects</span>
+            <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </Link>
         </div>
       </div>
-
-      <div className="text-center mt-4">
-        <p className="text-white uppercase tracking-widest text-xs">FREEDOM FROM BRITISH RULE</p>
-      </div>
-    </section>
+    </div>
   );
 }

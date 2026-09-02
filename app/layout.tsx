@@ -13,6 +13,9 @@ const lexendDeca = Lexend_Deca({
 export const metadata: Metadata = {
   title: "NEHA - Nexique Estate Housing Advisors",
   description: "Your trusted real estate partner in Delhi NCR - RERA approved residential & commercial projects",
+  verification: {
+    google: "ZYl48fTZd4_6lNW5iMjUWA9EJZmbw_aV4mkul38eYkU",
+  },
 };
 
 export default function RootLayout({
