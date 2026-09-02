@@ -40,6 +40,7 @@ type Project = {
   amenitiesImage: string;
   amenitiesCaption: string;
   locationHighlights: string[];
+  locationOverview?: string;
   configurations: string[];
   amenities: string[];
   mediaGallery?: MediaItem[];
@@ -161,6 +162,7 @@ function firestoreDocToProject(docId: string, data: Record<string, any>, startId
     amenitiesImage:   photos[photos.length - 1] || heroImage,
     amenitiesCaption: 'Property Amenities',
     locationHighlights: data.connectivityHighlights || data.locationHighlights || [],
+    locationOverview: data.locationOverview || '',
     configurations: Array.isArray(data.configurations) ? data.configurations
       : (data.bedrooms ? [`${data.bedrooms} BHK`] : []),
     amenities: Array.isArray(data.amenities) ? data.amenities : [],

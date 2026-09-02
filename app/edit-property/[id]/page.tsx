@@ -22,6 +22,7 @@ interface PropertyForm {
   configurations: string;
   amenities: string;
   locationHighlights: string;
+  locationOverview: string;
   image: string;
   imageUrl: string;
   reraNumber: string;
@@ -58,6 +59,7 @@ export default function EditPropertyPage() {
     configurations: '',
     amenities: '',
     locationHighlights: '',
+    locationOverview: '',
     image: '',
     imageUrl: '',
     reraNumber: '',
@@ -147,6 +149,7 @@ export default function EditPropertyPage() {
             : Array.isArray(data.connectivityHighlights)
             ? data.connectivityHighlights.join('\n')
             : (data.locationAdvantages || data.locationHighlights || ''),
+          locationOverview: data.locationOverview || '',
           image: data.image || data.imageUrl || data.heroImage || (Array.isArray(data.photos) && data.photos[0]) || '',
           imageUrl: data.imageUrl || data.image || '',
           reraNumber: data.reraNumber || data.RERA || fromDetails('rera number') || '',
@@ -230,6 +233,7 @@ export default function EditPropertyPage() {
         amenities: amenitiesArr,
         locationHighlights: locationHighlightsArr,
         connectivityHighlights: locationHighlightsArr,
+        locationOverview: formData.locationOverview.trim(),
         details: detailsArr,
         owner: {
           name: formData.ownerName,
@@ -595,6 +599,20 @@ export default function EditPropertyPage() {
                     placeholder="e.g. Swimming Pool, Gym, Clubhouse, Kids Play Area, etc."
                     className="w-full px-4 py-3.5 rounded-2xl text-sm text-slate-800 outline-none border border-slate-200 focus:border-slate-500 transition-colors bg-white resize-none"
                   />
+                </div>
+                {/* Location Overview */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Location & Connectivity Overview
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={formData.locationOverview}
+                    onChange={(e) => updateField('locationOverview', e.target.value)}
+                    placeholder="e.g. Located in the heart of Noida's commercial hub with easy access to metro and expressway..."
+                    className="w-full px-4 py-3.5 rounded-2xl text-sm text-slate-800 outline-none border border-slate-200 focus:border-slate-500 transition-colors bg-white resize-none"
+                  />
+                  <p className="text-xs text-slate-400 mt-1">Ye text website pe "Location That Continues To Drive Demand" section mein dikhega</p>
                 </div>
                 {/* Location Highlights */}
                 <div>

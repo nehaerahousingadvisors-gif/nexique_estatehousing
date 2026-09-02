@@ -32,6 +32,7 @@ type FProject = {
   amenitiesImage: string;
   amenitiesCaption: string;
   locationHighlights: string[];
+  locationOverview?: string;
   configurations: string[];
   amenities: string[];
   mediaGallery?: { id: number; type: 'image' | 'video'; url: string; thumbnail?: string; caption?: string }[];
@@ -122,6 +123,7 @@ function toProject(docId: string, d: Record<string, any>, i: number): FProject {
     amenitiesImage: photos[photos.length - 1] || heroImage,
     amenitiesCaption: 'Property Amenities',
     locationHighlights: d.connectivityHighlights || d.locationHighlights || [],
+    locationOverview: d.locationOverview || '',
     configurations: Array.isArray(d.configurations) ? d.configurations : d.bedrooms ? [`${d.bedrooms} BHK`] : [],
     amenities: Array.isArray(d.amenities) ? d.amenities : [],
     mediaGallery: d.mediaGallery?.length ? d.mediaGallery : [

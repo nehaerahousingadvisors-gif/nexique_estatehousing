@@ -30,6 +30,7 @@ interface Project {
   amenitiesImage: string;
   amenitiesCaption: string;
   locationHighlights: string[];
+  locationOverview?: string;
   configurations: string[];
   amenities: string[];
 }
@@ -395,7 +396,9 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
           <div className="px-8 md:px-12 py-10 border-t border-slate-200">
             <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">Location That Continues To Drive Demand</h3>
             <p className="text-slate-600 mb-6">
-              {project.location} has consistently remained one of the most desirable residential locations due to its combination of connectivity, established infrastructure and proximity to Delhi. For buyers considering both lifestyle and long-term value, the location of {project.name} remains one of its strongest advantages.
+              {project.locationOverview
+                ? project.locationOverview
+                : `${project.location} has consistently remained one of the most desirable residential locations due to its combination of connectivity, established infrastructure and proximity to Delhi. For buyers considering both lifestyle and long-term value, the location of ${project.name} remains one of its strongest advantages.`}
             </p>
             <h4 className="text-xl md:text-2xl font-bold text-slate-900 mb-3">Connectivity Highlights</h4>
             <ul className="list-disc list-inside space-y-2">

@@ -59,8 +59,8 @@ export default function Footer() {
           <div className="md:col-span-2 lg:col-span-1">
             <div className="flex items-center mb-3 md:mb-4">
               <Image
-                src="/15august.png"
-                alt="NEHA - New Era Housing Advisors"
+                src="/clogo.png"
+                alt="Nexique Estate Housing Advisors"
                 width={200}
                 height={200}
                 className="h-16 md:h-20 w-auto"
@@ -99,7 +99,7 @@ export default function Footer() {
               {[
                 { href: '/', label: 'Home' },
                 { href: '/about', label: 'About Us' },
-                { href: '/testimonials', label: 'Testimonials' },
+                { href: '/blog', label: 'Blog' },
                 { href: '/career', label: 'Career' },
                 { href: '/contact', label: 'Contact Us' },
                 { href: '/privacy', label: 'Privacy Policy' },
