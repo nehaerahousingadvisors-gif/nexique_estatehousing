@@ -16,6 +16,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: 'https://nexiqueestate.com/sitemap.xml',
+    sitemap: 'https://www.nexiqueestate.com/sitemap.xml',
   };
 }

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const BASE_URL = 'https://nexiqueestate.com';
+const BASE_URL = 'https://www.nexiqueestate.com';
 
 const blogSlugs = [
   'top-residential-projects-noida-2025',
