@@ -12,7 +12,7 @@ const blogSlugs = [
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  // Static pages
+  // ── Public static pages ────────────────────────────────────────────────────
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: BASE_URL,
@@ -51,38 +51,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.6,
     },
     {
-      url: `${BASE_URL}/post-property`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
       url: `${BASE_URL}/asset-management`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.6,
     },
-    {
-      url: `${BASE_URL}/privacy`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-    {
-      url: `${BASE_URL}/terms`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
   ];
 
-  // Blog post pages
+  // ── Blog post pages ────────────────────────────────────────────────────────
   const blogPages: MetadataRoute.Sitemap = blogSlugs.map((slug) => ({
     url: `${BASE_URL}/blog/${slug}`,
     lastModified: new Date(),
     changeFrequency: 'monthly' as const,
     priority: 0.7,
   }));
+
+  // Private pages NOT included:
+  // /login, /register, /admin, /admin/add-project,
+  // /my-properties, /post-property, /edit-property/[id]
 
   return [...staticPages, ...blogPages];
 }
