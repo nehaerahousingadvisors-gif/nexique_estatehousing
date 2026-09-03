@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LoginPopup from "@/components/LoginPopup";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 const lexendDeca = Lexend_Deca({
   variable: "--font-lexend-deca",
@@ -34,6 +35,7 @@ export default function RootLayout({
         <Header />
         <main className="flex-1" suppressHydrationWarning>{children}</main>
         <Footer />
+        <GoogleAnalytics gaId="G-FRPVKQRKHC" />
       </body>
     </html>
   );
