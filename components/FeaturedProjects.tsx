@@ -33,6 +33,9 @@ type FProject = {
   amenitiesCaption: string;
   locationHighlights: string[];
   locationOverview?: string;
+  units?: { unitNo: string; floor: string; type: string; size: string; price: string; status: string; facing: string; remarks: string }[];
+  totalUnits?: number;
+  availableUnits?: number;
   configurations: string[];
   amenities: string[];
   mediaGallery?: { id: number; type: 'image' | 'video'; url: string; thumbnail?: string; caption?: string }[];
@@ -124,6 +127,9 @@ function toProject(docId: string, d: Record<string, any>, i: number): FProject {
     amenitiesCaption: 'Property Amenities',
     locationHighlights: d.connectivityHighlights || d.locationHighlights || [],
     locationOverview: d.locationOverview || '',
+    units: d.units || [],
+    totalUnits: d.totalUnits ?? (d.units?.length || 0),
+    availableUnits: d.availableUnits ?? (d.units?.filter((u: { status: string }) => u.status === 'Available').length || 0),
     configurations: Array.isArray(d.configurations) ? d.configurations : d.bedrooms ? [`${d.bedrooms} BHK`] : [],
     amenities: Array.isArray(d.amenities) ? d.amenities : [],
     mediaGallery: d.mediaGallery?.length ? d.mediaGallery : [
@@ -521,7 +527,7 @@ export default function FeaturedProjects({
         </div>
       </section>
 
-      {selectedProject && <ProjectDetail project={selectedProject as any} onClose={() => setSelectedProject(null)} />}
+      {selectedProject && <ProjectDetail project={selectedProject} onClose={() => setSelectedProject(null)} />}
     </>
   );
 }

@@ -20,6 +20,26 @@ type PriceUnit = 'Total Price' | 'Per sq.ft.' | 'Per sq.m.' | 'Per sq.yd.';
 type MaintenanceUnit = 'Monthly' | 'Yearly';
 type BookingUnit = 'Fixed' | 'Percentage';
 
+// ─── Multi-Unit type ──────────────────────────────────────────────────────────
+interface Unit {
+  id: string;
+  unitNo: string;
+  floor: string;
+  type: string;
+  size: string;
+  price: string;
+  status: string;
+  facing: string;
+  remarks: string;
+  overview: string;
+  meetingRooms: string;
+  cabins: string;
+  imageFiles: File[];   // local files before upload
+  videoFiles: File[];
+  imageUrls: string[];  // uploaded URLs
+  videoUrls: string[];
+}
+
 const PRIMARY = '#1a2744';
 
 const steps = [
@@ -544,6 +564,41 @@ export default function PostPropertyPage() {
         }
       }
 
+      // ─── Phase 3.5: Upload Unit Images & Videos ───────────────────────────
+      if (units.some(u => u.imageFiles.length > 0 || u.videoFiles.length > 0)) {
+        setSubmitProgress('Uploading unit media...');
+        for (let ui = 0; ui < units.length; ui++) {
+          const unit = units[ui];
+          const uploadedImgUrls: string[] = [];
+          const uploadedVidUrls: string[] = [];
+          for (let fi = 0; fi < unit.imageFiles.length; fi++) {
+            try {
+              const url = await uploadFile(
+                unit.imageFiles[fi],
+                `properties/${user.uid}/units/${unit.id}/images`,
+                `img-${fi}`,
+              );
+              uploadedImgUrls.push(url);
+            } catch { /* skip failed */ }
+          }
+          for (let fi = 0; fi < unit.videoFiles.length; fi++) {
+            try {
+              const url = await uploadFile(
+                unit.videoFiles[fi],
+                `properties/${user.uid}/units/${unit.id}/videos`,
+                `vid-${fi}`,
+              );
+              uploadedVidUrls.push(url);
+            } catch { /* skip failed */ }
+          }
+          setUnits(prev => prev.map(u => u.id === unit.id
+            ? { ...u, imageUrls: uploadedImgUrls, videoUrls: uploadedVidUrls }
+            : u
+          ));
+          units[ui] = { ...unit, imageUrls: uploadedImgUrls, videoUrls: uploadedVidUrls };
+        }
+      }
+
       // ─── Phase 4: Build Property Document ─────────────────────────────────
       console.log('📄 Preparing Firestore document...');
       setSubmitProgress('Preparing property data...');
@@ -597,6 +652,16 @@ export default function PostPropertyPage() {
         reraNumber,
         locationOverview,
         connectivityHighlights: connectivityHighlights.filter(h => h.trim() !== ''),
+        // Multi-Unit inventory
+        units: units.map(({ id, imageFiles, videoFiles, ...rest }) => ({
+          ...rest,
+          price: rest.price && /^\d+$/.test(rest.price.replace(/,/g, ''))
+            ? `₹${Number(rest.price.replace(/,/g, '')).toLocaleString('en-IN')} onwards`
+            : rest.price,
+        })),
+        hasUnits: units.length > 0,
+        totalUnits: units.length,
+        availableUnits: units.filter(u => u.status === 'Available').length,
         // Media
         photos: photoUrls,
         videos: videoUrls,
@@ -754,6 +819,25 @@ export default function PostPropertyPage() {
   const [connectivityHighlights, setConnectivityHighlights] = useState<string[]>(['', '', '', '']);
   const [locationOverview, setLocationOverview] = useState('');
   const [propertyOverview, setPropertyOverview] = useState('');
+
+  // Multi-Unit state
+  const [units, setUnits] = useState<Unit[]>([]);
+
+  const addUnit = () => setUnits(prev => [...prev, {
+    id: Date.now().toString(),
+    unitNo: '', floor: '', type: '', size: '', price: '', status: 'Available', facing: '', remarks: '', overview: '', meetingRooms: '', cabins: '',
+    imageFiles: [], videoFiles: [], imageUrls: [], videoUrls: [],
+  }]);
+  const removeUnit = (id: string) => setUnits(prev => prev.filter(u => u.id !== id));
+  const updateUnit = (id: string, field: keyof Unit, value: string) =>
+    setUnits(prev => prev.map(u => u.id === id ? { ...u, [field]: value } : u));
+  const updateUnitFiles = (id: string, field: 'imageFiles' | 'videoFiles', files: File[]) =>
+    setUnits(prev => prev.map(u => u.id === id ? { ...u, [field]: files } : u));
+  const removeUnitFile = (id: string, field: 'imageFiles' | 'videoFiles', index: number) =>
+    setUnits(prev => prev.map(u => u.id === id
+      ? { ...u, [field]: u[field].filter((_, i) => i !== index) }
+      : u
+    ));
 
   // Step 4 — Media state (lifted to parent for submit handler access)
   const [photos, setPhotos] = useState<File[]>([]);
@@ -1318,6 +1402,193 @@ export default function PostPropertyPage() {
                       </button>
                     </div>
                   </div>
+
+                  {/* ── Multi-Unit Section (Commercial) ── */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-800">Units / Inventory</h3>
+                        <p className="text-xs text-gray-400 mt-0.5">Add individual units available in this project</p>
+                      </div>
+                      <button onClick={addUnit}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-colors"
+                        style={{ backgroundColor: PRIMARY }}>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Unit
+                      </button>
+                    </div>
+
+                    {units.length === 0 ? (
+                      <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center">
+                        <svg className="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
+                        </svg>
+                        <p className="text-sm text-gray-400 font-medium">No units added yet</p>
+                        <p className="text-xs text-gray-300 mt-1">Click "Add Unit" to add individual units</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {units.map((unit, idx) => (
+                          <div key={unit.id} className="border border-gray-200 rounded-xl p-4 bg-gray-50 relative">
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-sm font-bold text-slate-700">Unit {idx + 1}</span>
+                              <button onClick={() => removeUnit(unit.id)}
+                                className="text-xs text-red-400 hover:text-red-600 font-semibold transition-colors flex items-center gap-1">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Remove
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                              {([
+                                { key: 'unitNo',       label: 'Unit No.',         placeholder: 'e.g. A-101' },
+                                { key: 'floor',        label: 'Floor',            placeholder: 'e.g. 1st Floor' },
+                                { key: 'type',         label: 'Type',             placeholder: 'e.g. Office, Shop' },
+                                { key: 'size',         label: 'Size',             placeholder: 'e.g. 800 sq.ft.' },
+                                { key: 'price',        label: 'Price',            placeholder: 'e.g. ₹45 Lac' },
+                                { key: 'facing',       label: 'Facing',           placeholder: 'e.g. East' },
+                                { key: 'meetingRooms', label: 'No. of Meeting Rooms', placeholder: 'e.g. 2' },
+                                { key: 'cabins',       label: 'No. of Cabins',    placeholder: 'e.g. 4' },
+                              ] as { key: keyof Unit; label: string; placeholder: string }[]).map(({ key, label, placeholder }) => (
+                                <div key={key}>
+                                  <label className="block text-xs font-semibold text-slate-500 mb-1">{label}</label>
+                                  <input type="text" value={unit[key] as string} onChange={e => updateUnit(unit.id, key, e.target.value)}
+                                    placeholder={placeholder}
+                                    className="w-full px-3 py-2 rounded-lg border text-sm text-slate-700 outline-none bg-white transition-colors"
+                                    style={{ borderColor: (unit[key] as string) ? PRIMARY : '#e2e8f0' }} />
+                                </div>
+                              ))}
+                              <div>
+                                <label className="block text-xs font-semibold text-slate-500 mb-1">Status</label>
+                                <select value={unit.status} onChange={e => updateUnit(unit.id, 'status', e.target.value)}
+                                  className="w-full px-3 py-2 rounded-lg border text-sm text-slate-700 outline-none bg-white"
+                                  style={{ borderColor: PRIMARY }}>
+                                  <option>Available</option>
+                                  <option>Booked</option>
+                                  <option>Sold</option>
+                                </select>
+                              </div>
+                              <div className="col-span-2 sm:col-span-2">
+                                <label className="block text-xs font-semibold text-slate-500 mb-1">Remarks (optional)</label>
+                                <input type="text" value={unit.remarks} onChange={e => updateUnit(unit.id, 'remarks', e.target.value)}
+                                  placeholder="e.g. Corner unit, sea facing"
+                                  className="w-full px-3 py-2 rounded-lg border text-sm text-slate-700 outline-none bg-white transition-colors"
+                                  style={{ borderColor: unit.remarks ? PRIMARY : '#e2e8f0' }} />
+                              </div>
+
+                              {/* Overview */}
+                              <div className="col-span-2 sm:col-span-3">
+                                <label className="block text-xs font-semibold text-slate-500 mb-1">Unit Overview (optional)</label>
+                                <textarea
+                                  rows={3}
+                                  value={unit.overview}
+                                  onChange={e => updateUnit(unit.id, 'overview', e.target.value)}
+                                  placeholder="e.g. Premium office space with glass facade, modular interiors, and dedicated parking..."
+                                  className="w-full px-3 py-2 rounded-lg border text-sm text-slate-700 outline-none bg-white transition-colors resize-none"
+                                  style={{ borderColor: unit.overview ? PRIMARY : '#e2e8f0' }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Unit Media Upload */}
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Unit Photos & Videos</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {/* Images */}
+                                <div>
+                                  <label className="block text-xs font-semibold text-slate-500 mb-1.5">
+                                    Photos
+                                    {unit.imageFiles.length > 0 && (
+                                      <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-white" style={{ backgroundColor: PRIMARY }}>
+                                        {unit.imageFiles.length}
+                                      </span>
+                                    )}
+                                  </label>
+                                  <label className="flex items-center gap-2 px-3 py-2.5 border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
+                                    style={{ borderColor: unit.imageFiles.length > 0 ? PRIMARY : '#e2e8f0' }}>
+                                    <svg className="w-4 h-4 flex-shrink-0" style={{ color: unit.imageFiles.length > 0 ? PRIMARY : '#94a3b8' }} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <span className="text-xs text-slate-500 truncate">
+                                      {unit.imageFiles.length > 0
+                                        ? unit.imageFiles.map(f => f.name).join(', ')
+                                        : 'Add photos (JPG, PNG)'}
+                                    </span>
+                                    <input type="file" accept="image/*" multiple className="hidden"
+                                      onChange={e => {
+                                        if (e.target.files) {
+                                          updateUnitFiles(unit.id, 'imageFiles', [...unit.imageFiles, ...Array.from(e.target.files)]);
+                                        }
+                                      }} />
+                                  </label>
+                                  {unit.imageFiles.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 mt-2">
+                                      {unit.imageFiles.map((f, fi) => (
+                                        <div key={fi} className="relative group">
+                                          <img src={URL.createObjectURL(f)} alt="" className="w-14 h-14 object-cover rounded-lg border border-gray-200" />
+                                          <button type="button" onClick={() => removeUnitFile(unit.id, 'imageFiles', fi)}
+                                            className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            ✕
+                                          </button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Videos */}
+                                <div>
+                                  <label className="block text-xs font-semibold text-slate-500 mb-1.5">
+                                    Videos
+                                    {unit.videoFiles.length > 0 && (
+                                      <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-white" style={{ backgroundColor: PRIMARY }}>
+                                        {unit.videoFiles.length}
+                                      </span>
+                                    )}
+                                  </label>
+                                  <label className="flex items-center gap-2 px-3 py-2.5 border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
+                                    style={{ borderColor: unit.videoFiles.length > 0 ? PRIMARY : '#e2e8f0' }}>
+                                    <svg className="w-4 h-4 flex-shrink-0" style={{ color: unit.videoFiles.length > 0 ? PRIMARY : '#94a3b8' }} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.867v6.266a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    <span className="text-xs text-slate-500 truncate">
+                                      {unit.videoFiles.length > 0
+                                        ? `${unit.videoFiles.length} video${unit.videoFiles.length > 1 ? 's' : ''} selected`
+                                        : 'Add videos (MP4, MOV)'}
+                                    </span>
+                                    <input type="file" accept="video/*" multiple className="hidden"
+                                      onChange={e => {
+                                        if (e.target.files) {
+                                          updateUnitFiles(unit.id, 'videoFiles', [...unit.videoFiles, ...Array.from(e.target.files)]);
+                                        }
+                                      }} />
+                                  </label>
+                                  {unit.videoFiles.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 mt-2">
+                                      {unit.videoFiles.map((f, fi) => (
+                                        <div key={fi} className="relative flex items-center gap-1 bg-slate-100 rounded-lg px-2 py-1">
+                                          <svg className="w-3 h-3 text-slate-500" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z" />
+                                          </svg>
+                                          <span className="text-[10px] text-slate-600 max-w-[80px] truncate">{f.name}</span>
+                                          <button type="button" onClick={() => removeUnitFile(unit.id, 'videoFiles', fi)}
+                                            className="text-red-400 hover:text-red-600 text-[10px] ml-1">✕</button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <p className="text-xs text-gray-400 text-right">{units.length} unit{units.length > 1 ? 's' : ''} added</p>
+                      </div>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
@@ -1605,6 +1876,180 @@ export default function PostPropertyPage() {
                         + Add more
                       </button>
                     </div>
+                  </div>
+
+                  {/* ── Multi-Unit Section (Residential) ── */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-800">Units / Inventory</h3>
+                        <p className="text-xs text-gray-400 mt-0.5">Add individual units available in this project</p>
+                      </div>
+                      <button onClick={addUnit}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-colors"
+                        style={{ backgroundColor: PRIMARY }}>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Unit
+                      </button>
+                    </div>
+
+                    {units.length === 0 ? (
+                      <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center">
+                        <svg className="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
+                        </svg>
+                        <p className="text-sm text-gray-400 font-medium">No units added yet</p>
+                        <p className="text-xs text-gray-300 mt-1">Click "Add Unit" to add individual units</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {units.map((unit, idx) => (
+                          <div key={unit.id} className="border border-gray-200 rounded-xl p-4 bg-gray-50 relative">
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-sm font-bold text-slate-700">Unit {idx + 1}</span>
+                              <button onClick={() => removeUnit(unit.id)}
+                                className="text-xs text-red-400 hover:text-red-600 font-semibold transition-colors flex items-center gap-1">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Remove
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                              {([
+                                { key: 'unitNo',       label: 'Unit No.',             placeholder: 'e.g. A-101' },
+                                { key: 'floor',        label: 'Floor',                placeholder: 'e.g. 3rd Floor' },
+                                { key: 'type',         label: 'Type',                 placeholder: 'e.g. 2 BHK, 3 BHK' },
+                                { key: 'size',         label: 'Size',                 placeholder: 'e.g. 1200 sq.ft.' },
+                                { key: 'price',        label: 'Price',                placeholder: 'e.g. ₹85 Lac' },
+                                { key: 'facing',       label: 'Facing',               placeholder: 'e.g. North-East' },
+                                { key: 'meetingRooms', label: 'No. of Meeting Rooms', placeholder: 'e.g. 2' },
+                                { key: 'cabins',       label: 'No. of Cabins',        placeholder: 'e.g. 4' },
+                              ] as { key: keyof Unit; label: string; placeholder: string }[]).map(({ key, label, placeholder }) => (
+                                <div key={key}>
+                                  <label className="block text-xs font-semibold text-slate-500 mb-1">{label}</label>
+                                  <input type="text" value={unit[key] as string} onChange={e => updateUnit(unit.id, key, e.target.value)}
+                                    placeholder={placeholder}
+                                    className="w-full px-3 py-2 rounded-lg border text-sm text-slate-700 outline-none bg-white transition-colors"
+                                    style={{ borderColor: (unit[key] as string) ? PRIMARY : '#e2e8f0' }} />
+                                </div>
+                              ))}
+                              <div>
+                                <label className="block text-xs font-semibold text-slate-500 mb-1">Status</label>
+                                <select value={unit.status} onChange={e => updateUnit(unit.id, 'status', e.target.value)}
+                                  className="w-full px-3 py-2 rounded-lg border text-sm text-slate-700 outline-none bg-white"
+                                  style={{ borderColor: PRIMARY }}>
+                                  <option>Available</option>
+                                  <option>Booked</option>
+                                  <option>Sold</option>
+                                </select>
+                              </div>
+                              <div className="col-span-2 sm:col-span-2">
+                                <label className="block text-xs font-semibold text-slate-500 mb-1">Remarks (optional)</label>
+                                <input type="text" value={unit.remarks} onChange={e => updateUnit(unit.id, 'remarks', e.target.value)}
+                                  placeholder="e.g. Corner unit, garden facing"
+                                  className="w-full px-3 py-2 rounded-lg border text-sm text-slate-700 outline-none bg-white transition-colors"
+                                  style={{ borderColor: unit.remarks ? PRIMARY : '#e2e8f0' }} />
+                              </div>
+                            </div>
+
+                            {/* Unit Media Upload */}
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Unit Photos & Videos</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {/* Images */}
+                                <div>
+                                  <label className="block text-xs font-semibold text-slate-500 mb-1.5">
+                                    Photos
+                                    {unit.imageFiles.length > 0 && (
+                                      <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-white" style={{ backgroundColor: PRIMARY }}>
+                                        {unit.imageFiles.length}
+                                      </span>
+                                    )}
+                                  </label>
+                                  <label className="flex items-center gap-2 px-3 py-2.5 border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
+                                    style={{ borderColor: unit.imageFiles.length > 0 ? PRIMARY : '#e2e8f0' }}>
+                                    <svg className="w-4 h-4 flex-shrink-0" style={{ color: unit.imageFiles.length > 0 ? PRIMARY : '#94a3b8' }} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <span className="text-xs text-slate-500 truncate">
+                                      {unit.imageFiles.length > 0
+                                        ? unit.imageFiles.map(f => f.name).join(', ')
+                                        : 'Add photos (JPG, PNG)'}
+                                    </span>
+                                    <input type="file" accept="image/*" multiple className="hidden"
+                                      onChange={e => {
+                                        if (e.target.files) {
+                                          updateUnitFiles(unit.id, 'imageFiles', [...unit.imageFiles, ...Array.from(e.target.files)]);
+                                        }
+                                      }} />
+                                  </label>
+                                  {unit.imageFiles.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 mt-2">
+                                      {unit.imageFiles.map((f, fi) => (
+                                        <div key={fi} className="relative group">
+                                          <img src={URL.createObjectURL(f)} alt="" className="w-14 h-14 object-cover rounded-lg border border-gray-200" />
+                                          <button type="button" onClick={() => removeUnitFile(unit.id, 'imageFiles', fi)}
+                                            className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            ✕
+                                          </button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Videos */}
+                                <div>
+                                  <label className="block text-xs font-semibold text-slate-500 mb-1.5">
+                                    Videos
+                                    {unit.videoFiles.length > 0 && (
+                                      <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-white" style={{ backgroundColor: PRIMARY }}>
+                                        {unit.videoFiles.length}
+                                      </span>
+                                    )}
+                                  </label>
+                                  <label className="flex items-center gap-2 px-3 py-2.5 border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
+                                    style={{ borderColor: unit.videoFiles.length > 0 ? PRIMARY : '#e2e8f0' }}>
+                                    <svg className="w-4 h-4 flex-shrink-0" style={{ color: unit.videoFiles.length > 0 ? PRIMARY : '#94a3b8' }} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.867v6.266a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    <span className="text-xs text-slate-500 truncate">
+                                      {unit.videoFiles.length > 0
+                                        ? `${unit.videoFiles.length} video${unit.videoFiles.length > 1 ? 's' : ''} selected`
+                                        : 'Add videos (MP4, MOV)'}
+                                    </span>
+                                    <input type="file" accept="video/*" multiple className="hidden"
+                                      onChange={e => {
+                                        if (e.target.files) {
+                                          updateUnitFiles(unit.id, 'videoFiles', [...unit.videoFiles, ...Array.from(e.target.files)]);
+                                        }
+                                      }} />
+                                  </label>
+                                  {unit.videoFiles.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 mt-2">
+                                      {unit.videoFiles.map((f, fi) => (
+                                        <div key={fi} className="relative flex items-center gap-1 bg-slate-100 rounded-lg px-2 py-1">
+                                          <svg className="w-3 h-3 text-slate-500" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z" />
+                                          </svg>
+                                          <span className="text-[10px] text-slate-600 max-w-[80px] truncate">{f.name}</span>
+                                          <button type="button" onClick={() => removeUnitFile(unit.id, 'videoFiles', fi)}
+                                            className="text-red-400 hover:text-red-600 text-[10px] ml-1">✕</button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <p className="text-xs text-gray-400 text-right">{units.length} unit{units.length > 1 ? 's' : ''} added</p>
+                      </div>
+                    )}
                   </div>
                 </>
               )}

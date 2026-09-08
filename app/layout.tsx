@@ -12,8 +12,18 @@ const lexendDeca = Lexend_Deca({
 });
 
 export const metadata: Metadata = {
-  title: "NEHA - Nexique Estate Housing Advisors",
-  description: "Your trusted real estate partner in Delhi NCR - RERA approved residential & commercial projects",
+  title: "Property for Sale in Noida | Real Estate Consultant | Nexique Estate",
+  description: "Nexique Estate is a trusted real estate consultant in Noida, offering residential and commercial properties for sale and investment.",
+  keywords: [
+    "Property for Sale in Noida",
+    "Flats for Sale in Noida",
+    "Property Dealer in Noida",
+    "Real Estate Consultant in Noida",
+    "Residential Property Noida",
+    "Commercial Property Noida",
+    "RERA Approved Projects Noida",
+    "Nexique Estate",
+  ],
   verification: {
     google: "ZYl48fTZd4_6lNW5iMjUWA9EJZmbw_aV4mkul38eYkU",
   },

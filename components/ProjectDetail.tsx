@@ -3,6 +3,339 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
+// ── Status badge ─────────────────────────────────────────────────────────────
+function StatusBadge({ status }: { status: string }) {
+  const cls =
+    status === 'Available' ? 'bg-green-100 text-green-700' :
+    status === 'Booked'    ? 'bg-yellow-100 text-yellow-700' :
+                             'bg-red-100 text-red-600';
+  return <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${cls}`}>{status}</span>;
+}
+
+// ── Unit type ────────────────────────────────────────────────────────────────
+interface UnitData {
+  unitNo?: string; floor?: string; type?: string; size?: string;
+  price?: string; status?: string; facing?: string; remarks?: string;
+  overview?: string; meetingRooms?: string; cabins?: string;
+  imageUrls?: string[]; videoUrls?: string[];
+}
+
+// ── Lightbox ─────────────────────────────────────────────────────────────────
+function Lightbox({ images, index, onClose }: { images: string[]; index: number; onClose: () => void }) {
+  const [current, setCurrent] = useState(index);
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') setCurrent(c => (c + 1) % images.length);
+      if (e.key === 'ArrowLeft')  setCurrent(c => (c - 1 + images.length) % images.length);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [images.length, onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90"
+      onClick={onClose}
+    >
+      {/* Close */}
+      <button
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+        onClick={onClose}
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      {/* Prev */}
+      {images.length > 1 && (
+        <button
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white"
+          onClick={e => { e.stopPropagation(); setCurrent(c => (c - 1 + images.length) % images.length); }}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+      )}
+
+      {/* Image */}
+      <div className="relative max-w-4xl max-h-[85vh] w-full mx-16" onClick={e => e.stopPropagation()}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={images[current]}
+          alt={`Unit photo ${current + 1}`}
+          className="w-full h-full max-h-[85vh] object-contain rounded-xl"
+        />
+        {images.length > 1 && (
+          <p className="absolute bottom-3 left-1/2 -translate-x-1/2 text-white/60 text-xs">
+            {current + 1} / {images.length}
+          </p>
+        )}
+      </div>
+
+      {/* Next */}
+      {images.length > 1 && (
+        <button
+          className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white"
+          onClick={e => { e.stopPropagation(); setCurrent(c => (c + 1) % images.length); }}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      )}
+
+      {/* Thumbnail strip */}
+      {images.length > 1 && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+          {images.map((url, ii) => (
+            <button key={ii} onClick={e => { e.stopPropagation(); setCurrent(ii); }}
+              className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${ii === current ? 'border-white scale-110' : 'border-white/30 opacity-60'}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={url} alt="" className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── UnitInventorySection ──────────────────────────────────────────────────────
+function UnitInventorySection({ units, totalUnits, availableUnits }: {
+  units: UnitData[];
+  totalUnits?: number;
+  availableUnits?: number;
+}) {
+  const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
+  const [videoModal, setVideoModal] = useState<string | null>(null);
+  const [videoOpen, setVideoOpen] = useState<Record<number, boolean>>({});
+
+  return (
+    <>
+      {lightbox && (
+        <Lightbox images={lightbox.images} index={lightbox.index} onClose={() => setLightbox(null)} />
+      )}
+
+      {/* Video fullscreen modal */}
+      {videoModal && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95"
+          onClick={() => setVideoModal(null)}
+        >
+          <button
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            onClick={() => setVideoModal(null)}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="w-full max-w-3xl mx-4" onClick={e => e.stopPropagation()}>
+            <video
+              src={videoModal}
+              className="w-full rounded-xl"
+              autoPlay
+              controls
+              playsInline
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="px-4 sm:px-8 md:px-12 py-6 border-t border-slate-200">
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg sm:text-2xl md:text-3xl font-bold text-slate-900">Units / Inventory</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Available units in this project</p>
+          </div>
+          <div className="flex gap-1.5">
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+              Total: {totalUnits ?? units.length}
+            </span>
+            {availableUnits !== undefined && (
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Available: {availableUnits}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Unit cards */}
+        <div className="space-y-6">
+          {units.map((unit, i) => (
+            <div key={i} className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+              {/* Always horizontal: photo left, details right */}
+              <div className="flex flex-row">
+
+                {/* Left — PHOTOS + VIDEOS */}
+                {(unit.imageUrls && unit.imageUrls.length > 0) || (unit.videoUrls && unit.videoUrls.length > 0) ? (
+                  <div className="w-24 sm:w-40 md:w-44 flex-shrink-0 border-r border-slate-100">
+
+                    {/* Photos */}
+                    {unit.imageUrls && unit.imageUrls.length > 0 && (
+                      <>
+                        <div className="flex items-center gap-1 px-1.5 pt-1.5 pb-1">
+                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Photos</span>
+                          <span className="ml-auto text-[8px] font-bold bg-slate-100 text-slate-500 px-1 py-0.5 rounded-full">
+                            {unit.imageUrls.length}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-0.5 px-1 pb-1.5">
+                          {unit.imageUrls.slice(0, 4).map((url, ii) => {
+                            const isLast = ii === 3;
+                            const remaining = unit.imageUrls!.length - 4;
+                            return (
+                              <button
+                                key={ii}
+                                onClick={() => setLightbox({ images: unit.imageUrls!, index: ii })}
+                                className="relative rounded overflow-hidden"
+                                style={{ aspectRatio: '1 / 1' }}
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={url} alt="" className="w-full h-full object-cover" />
+                                {isLast && remaining > 0 && (
+                                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                    <span className="text-white text-xs font-bold">+{remaining}</span>
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Videos — accordion */}
+                    {unit.videoUrls && unit.videoUrls.length > 0 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setVideoOpen(prev => ({ ...prev, [i]: !prev[i] }))}
+                          className="w-full flex items-center gap-1 px-1.5 pt-1 pb-1 border-t border-slate-100 hover:bg-slate-50 transition-colors"
+                        >
+                          <svg className="w-2.5 h-2.5 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Videos</span>
+                          <span className="ml-auto text-[8px] font-bold bg-slate-100 text-slate-500 px-1 py-0.5 rounded-full">
+                            {unit.videoUrls.length}
+                          </span>
+                          <svg
+                            className={`w-2.5 h-2.5 text-slate-400 ml-1 transition-transform ${videoOpen[i] ? 'rotate-180' : ''}`}
+                            fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        {videoOpen[i] && (
+                          <div className="grid grid-cols-2 gap-0.5 px-1 pb-1.5">
+                            {unit.videoUrls.slice(0, 2).map((url, vi) => {
+                              const isLast = vi === 1;
+                              const remaining = unit.videoUrls!.length - 2;
+                              return (
+                                <button
+                                  key={vi}
+                                  onClick={() => setVideoModal(url)}
+                                  className="relative rounded overflow-hidden bg-slate-900 group"
+                                  style={{ aspectRatio: '1 / 1' }}
+                                >
+                                  <video src={url} className="w-full h-full object-cover" muted playsInline />
+                                  {isLast && remaining > 0 ? (
+                                    <div className="absolute inset-0 bg-black/65 flex items-center justify-center">
+                                      <span className="text-white text-xs font-bold">+{remaining}</span>
+                                    </div>
+                                  ) : (
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/55 transition-colors">
+                                      <div className="w-6 h-6 rounded-full bg-white/90 flex items-center justify-center">
+                                        <svg className="w-3 h-3 text-slate-800 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                          <path d="M8 5v14l11-7z" />
+                                        </svg>
+                                      </div>
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-16 sm:w-32 flex-shrink-0 bg-slate-50 flex items-center justify-center border-r border-slate-100">
+                    <svg className="w-5 h-5 text-slate-200" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                )}
+
+                {/* Right — details */}
+                <div className="flex-1 p-3 min-w-0">
+                  {/* Title + status */}
+                  <div className="flex items-start justify-between gap-1 mb-1">
+                    <div className="min-w-0">
+                      <h4 className="text-sm sm:text-base font-bold text-slate-900 truncate">
+                        {unit.unitNo ? `Unit ${unit.unitNo}` : `Unit ${i + 1}`}
+                      </h4>
+                      {unit.type && <p className="text-xs text-slate-400 truncate">{unit.type}</p>}
+                    </div>
+                    <StatusBadge status={unit.status || 'Available'} />
+                  </div>
+
+                  {/* Price */}
+                  {unit.price && (
+                    <div className="mb-2">
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wide">Starting at</p>
+                      <p className="text-sm sm:text-base font-black" style={{ color: '#1a2744' }}>
+                        {/^\d+$/.test(unit.price.replace(/,/g, ''))
+                          ? `₹${Number(unit.price.replace(/,/g, '')).toLocaleString('en-IN')} onwards`
+                          : unit.price}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Info inline tags */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {([
+                      { label: 'Floor', value: unit.floor },
+                      { label: 'Size',  value: unit.size  },
+                      { label: 'Mtg',   value: unit.meetingRooms },
+                      { label: 'Cabin', value: unit.cabins },
+                      { label: 'Face',  value: unit.facing },
+                    ] as { label: string; value?: string }[])
+                      .filter(x => x.value)
+                      .map(({ label, value }) => (
+                        <span key={label} className="inline-flex items-center gap-1 px-3 py-1 bg-slate-50 border border-slate-200 rounded-full text-xs sm:text-sm text-slate-700">
+                          <span className="font-semibold text-slate-500">{label}:</span>{value}
+                        </span>
+                      ))}
+                  </div>
+
+                  {/* Overview */}
+                  {unit.overview && (
+                    <div className="mt-2 p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-100">
+                      <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-1">Overview</p>
+                      <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">{unit.overview}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+
+
 interface MediaItem {
   id: number;
   type: 'image' | 'video';
@@ -13,6 +346,7 @@ interface MediaItem {
 
 interface Project {
   id: number;
+  firestoreId?: string;
   name: string;
   location: string;
   price: string;
@@ -33,6 +367,23 @@ interface Project {
   locationOverview?: string;
   configurations: string[];
   amenities: string[];
+  units?: {
+    unitNo: string;
+    floor: string;
+    type: string;
+    size: string;
+    price: string;
+    status: string;
+    facing: string;
+    remarks: string;
+    overview?: string;
+    meetingRooms?: string;
+    cabins?: string;
+    imageUrls?: string[];
+    videoUrls?: string[];
+  }[];
+  totalUnits?: number;
+  availableUnits?: number;
 }
 
 interface ProjectDetailProps {
@@ -183,7 +534,7 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
           {/* Hero Section */}
           <div className="relative">
             {/* Main Media Display with Fullscreen Button */}
-            <div className="relative h-[50vh] bg-slate-900 group">
+            <div className="relative h-[28vh] sm:h-[40vh] md:h-[50vh] bg-slate-900 group">
               {mediaGallery[selectedMediaIndex]?.type === 'image' ? (
                 <Image 
                   src={mediaGallery[selectedMediaIndex]?.url} 
@@ -213,19 +564,19 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
                 </svg>
               </button>
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
-                <p className="text-sm uppercase tracking-widest mb-2" style={{ color: '#C4A35A' }}>{project.category} • {project.location}</p>
-                <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">{project.name}</h1>
-                <div className="flex flex-wrap items-center gap-4 text-white">
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 lg:p-12">
+                <p className="text-[10px] sm:text-sm uppercase tracking-widest mb-1 sm:mb-2 truncate text-white">{project.category} • {project.location}</p>
+                <h1 className="text-xl sm:text-3xl md:text-5xl font-bold text-white mb-2 sm:mb-3 leading-tight">{project.name}</h1>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-white text-xs sm:text-base">
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <svg className="w-3 h-3 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <span>{project.location}</span>
+                    <span className="line-clamp-1">{project.location}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <svg className="w-3 h-3 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>RERA: {project.reraNumber}</span>
@@ -333,9 +684,9 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
           </div>
 
           {/* Overview Section */}
-          <div className="px-8 md:px-12 py-10 bg-slate-50">
-            <p className="text-sm uppercase tracking-widest mb-4" style={{ color: '#C4A35A' }}>Overview</p>
-            <p className="text-xl md:text-2xl text-slate-600 leading-relaxed">{project.overview}</p>
+          <div className="px-8 md:px-12 py-8 bg-slate-50">
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#C4A35A' }}>Overview</p>
+            <p className="text-sm md:text-base text-slate-600 leading-relaxed">{project.overview}</p>
           </div>
 
           {/* Details Table */}
@@ -392,6 +743,15 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
             )}
           </div>
 
+          {/* Units / Inventory Section */}
+          {project.units && project.units.length > 0 && (
+            <UnitInventorySection
+              units={project.units}
+              totalUnits={project.totalUnits}
+              availableUnits={project.availableUnits}
+            />
+          )}
+
           {/* Location Section */}
           <div className="px-8 md:px-12 py-10 border-t border-slate-200">
             <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">Location That Continues To Drive Demand</h3>
@@ -433,10 +793,13 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
               </a>
               <button
                 onClick={() => {
+                  const shareUrl = project.firestoreId
+                    ? `https://www.nexiqueestate.com/projects?id=${project.firestoreId}`
+                    : `https://www.nexiqueestate.com/projects`;
                   if (navigator.share) {
-                    navigator.share({ title: project.name, text: `Check out ${project.name} at ${project.location}`, url: window.location.href });
+                    navigator.share({ title: project.name, text: `Check out ${project.name} at ${project.location}`, url: shareUrl });
                   } else {
-                    navigator.clipboard.writeText(window.location.href);
+                    navigator.clipboard.writeText(shareUrl);
                     alert('Link copied to clipboard!');
                   }
                 }}
@@ -499,54 +862,103 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
           </div>
 
           {/* Photos & Videos Section */}
-          <div className="px-8 md:px-12 py-6 border-t border-slate-200">
-            <h2 className="text-lg font-bold text-slate-900 mb-4">Photos & Videos</h2>
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
-              {mediaGallery.map((media, index) => (
-                <div
-                  key={media.id}
-                  className="relative group cursor-pointer rounded-lg overflow-hidden shadow hover:shadow-md transition-all duration-300"
-                  onClick={() => {
-                    setSelectedMediaIndex(index);
-                    setIsFullscreen(true);
-                  }}
-                >
-                  {media.type === 'image' ? (
-                    <div className="aspect-square relative">
-                      <Image
-                        src={media.url}
-                        alt={media.caption || 'Project Photo'}
-                        fill
-                        sizes="(max-width: 640px) 33vw, 20vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
-                  ) : (
-                    <div className="aspect-square relative bg-slate-900">
-                      <video
-                        src={media.url}
-                        className="w-full h-full object-cover"
-                        muted
-                        playsInline
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center group-hover:bg-black/70 transition-colors">
-                          <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8 5v14l11-7z" />
-                          </svg>
-                        </div>
+          {(() => {
+            const photos = mediaGallery.filter(m => m.type === 'image');
+            const videos = mediaGallery.filter(m => m.type === 'video');
+            const MAX_PHOTOS = 4;
+            const MAX_VIDEOS = 2;
+            const visiblePhotos = photos.slice(0, MAX_PHOTOS);
+            const visibleVideos = videos.slice(0, MAX_VIDEOS);
+            const extraPhotos = photos.length - MAX_PHOTOS;
+            const extraVideos = videos.length - MAX_VIDEOS;
+
+            const renderTile = (media: MediaItem, galleryIndex: number, isLastVisible: boolean, extra: number) => (
+              <div
+                key={media.id}
+                className="relative group cursor-pointer rounded-lg overflow-hidden shadow hover:shadow-md transition-all duration-300"
+                onClick={() => {
+                  setSelectedMediaIndex(galleryIndex);
+                  setIsFullscreen(true);
+                }}
+              >
+                {media.type === 'image' ? (
+                  <div className="aspect-square relative">
+                    <Image
+                      src={media.url}
+                      alt={media.caption || 'Project Photo'}
+                      fill
+                      sizes="(max-width: 640px) 33vw, 20vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                ) : (
+                  <div className="aspect-square relative bg-slate-900">
+                    <video src={media.url} className="w-full h-full object-cover" muted playsInline />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center group-hover:bg-black/70 transition-colors">
+                        <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
                       </div>
                     </div>
-                  )}
-                  {media.caption && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
-                      <p className="text-white text-[10px] font-medium truncate">{media.caption}</p>
+                  </div>
+                )}
+                {/* +N overlay on the last visible tile when there are more */}
+                {isLastVisible && extra > 0 && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-lg">
+                    <span className="text-white text-lg font-bold">+{extra}</span>
+                  </div>
+                )}
+                {!isLastVisible && media.caption && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
+                    <p className="text-white text-[10px] font-medium truncate">{media.caption}</p>
+                  </div>
+                )}
+              </div>
+            );
+
+            return (
+              <div className="px-8 md:px-12 py-6 border-t border-slate-200">
+                {/* Photos row */}
+                {visiblePhotos.length > 0 && (
+                  <div className="mb-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <h2 className="text-sm font-bold uppercase tracking-widest text-slate-500">Photos</h2>
+                      <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+                        {photos.length}
+                      </span>
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {visiblePhotos.map((media, i) => {
+                        const galleryIndex = mediaGallery.findIndex(m => m.id === media.id);
+                        const isLast = i === visiblePhotos.length - 1;
+                        return renderTile(media, galleryIndex, isLast, extraPhotos);
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Videos row */}
+                {visibleVideos.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <h2 className="text-sm font-bold uppercase tracking-widest text-slate-500">Videos</h2>
+                      <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+                        {videos.length}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {visibleVideos.map((media, i) => {
+                        const galleryIndex = mediaGallery.findIndex(m => m.id === media.id);
+                        const isLast = i === visibleVideos.length - 1;
+                        return renderTile(media, galleryIndex, isLast, extraVideos);
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </div>
     </>

@@ -1,14 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { auth, db, storage } from '@/lib/firebase';
 
 const PRIMARY = '#1a2744';
+
+interface EditUnit {
+  id: string;
+  unitNo: string; floor: string; type: string; size: string;
+  price: string; status: string; facing: string; remarks: string;
+  overview: string; meetingRooms: string; cabins: string;
+  imageUrls: string[];   // already-uploaded URLs from Firebase
+  videoUrls: string[];
+  imageFiles: File[];    // new files to upload
+  videoFiles: File[];    // new video files to upload
+}
 
 interface PropertyForm {
   name: string;
@@ -46,6 +58,32 @@ export default function EditPropertyPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState('');
   const [sourceCollection, setSourceCollection] = useState<string>('');
+
+  // ── Units state ────────────────────────────────────────────────────────────
+  const [units, setUnits] = useState<EditUnit[]>([]);
+
+  const addUnit = () => setUnits(prev => [...prev, {
+    id: Date.now().toString(),
+    unitNo: '', floor: '', type: '', size: '', price: '',
+    status: 'Available', facing: '', remarks: '', overview: '',
+    meetingRooms: '', cabins: '', imageUrls: [], videoUrls: [], imageFiles: [], videoFiles: [],
+  }]);
+  const removeUnit = (id: string) => setUnits(prev => prev.filter(u => u.id !== id));
+  const updateUnit = (id: string, field: keyof EditUnit, value: string) =>
+    setUnits(prev => prev.map(u => u.id === id ? { ...u, [field]: value } : u));
+  const addUnitImages = (id: string, files: File[]) =>
+    setUnits(prev => prev.map(u => u.id === id ? { ...u, imageFiles: [...u.imageFiles, ...files] } : u));
+  const removeUnitImageFile = (id: string, idx: number) =>
+    setUnits(prev => prev.map(u => u.id === id ? { ...u, imageFiles: u.imageFiles.filter((_, i) => i !== idx) } : u));
+  const removeUnitImageUrl = (id: string, idx: number) =>
+    setUnits(prev => prev.map(u => u.id === id ? { ...u, imageUrls: u.imageUrls.filter((_, i) => i !== idx) } : u));
+
+  const addUnitVideos = (id: string, files: File[]) =>
+    setUnits(prev => prev.map(u => u.id === id ? { ...u, videoFiles: [...u.videoFiles, ...files] } : u));
+  const removeUnitVideoFile = (id: string, idx: number) =>
+    setUnits(prev => prev.map(u => u.id === id ? { ...u, videoFiles: u.videoFiles.filter((_, i) => i !== idx) } : u));
+  const removeUnitVideoUrl = (id: string, idx: number) =>
+    setUnits(prev => prev.map(u => u.id === id ? { ...u, videoUrls: u.videoUrls.filter((_, i) => i !== idx) } : u));
 
   const [formData, setFormData] = useState<PropertyForm>({
     name: '',
@@ -158,6 +196,21 @@ export default function EditPropertyPage() {
           ownerEmail: data.owner?.email || '',
           ownerContact: data.owner?.contact || '',
         });
+
+        // Load existing units
+        if (Array.isArray(data.units)) {
+          setUnits(data.units.map((u: any, i: number) => ({
+            id: u.id || String(i),
+            unitNo: u.unitNo || '', floor: u.floor || '', type: u.type || '',
+            size: u.size || '', price: u.price || '', status: u.status || 'Available',
+            facing: u.facing || '', remarks: u.remarks || '', overview: u.overview || '',
+            meetingRooms: u.meetingRooms || '', cabins: u.cabins || '',
+            imageUrls: Array.isArray(u.imageUrls) ? u.imageUrls : [],
+            videoUrls: Array.isArray(u.videoUrls) ? u.videoUrls : [],
+            imageFiles: [],
+            videoFiles: [],
+          })));
+        }
       } catch (err) {
         console.error('Error loading property:', err);
         setError('Failed to load property. Please try again.');
@@ -235,6 +288,46 @@ export default function EditPropertyPage() {
         connectivityHighlights: locationHighlightsArr,
         locationOverview: formData.locationOverview.trim(),
         details: detailsArr,
+        // ── Units ──────────────────────────────────────────────────────────
+        units: await Promise.all(units.map(async ({ id, imageFiles, videoFiles, ...rest }) => {
+          const newImgUrls: string[] = [];
+          const newVidUrls: string[] = [];
+          for (const file of imageFiles) {
+            try {
+              const storageRef = ref(storage, `properties/${propertyId}/units/${id}/${Date.now()}_${file.name.replace(/\s+/g,'_')}`);
+              await new Promise<void>((resolve, reject) => {
+                const task = uploadBytesResumable(storageRef, file);
+                task.on('state_changed', null, reject, async () => {
+                  newImgUrls.push(await getDownloadURL(task.snapshot.ref));
+                  resolve();
+                });
+              });
+            } catch { /* skip failed */ }
+          }
+          for (const file of videoFiles) {
+            try {
+              const storageRef = ref(storage, `properties/${propertyId}/units/${id}/videos/${Date.now()}_${file.name.replace(/\s+/g,'_')}`);
+              await new Promise<void>((resolve, reject) => {
+                const task = uploadBytesResumable(storageRef, file);
+                task.on('state_changed', null, reject, async () => {
+                  newVidUrls.push(await getDownloadURL(task.snapshot.ref));
+                  resolve();
+                });
+              });
+            } catch { /* skip failed */ }
+          }
+          return {
+            ...rest,
+            price: rest.price && /^\d+$/.test(rest.price.replace(/,/g, ''))
+              ? `₹${Number(rest.price.replace(/,/g, '')).toLocaleString('en-IN')} onwards`
+              : rest.price,
+            imageUrls: [...rest.imageUrls, ...newImgUrls],
+            videoUrls: [...rest.videoUrls, ...newVidUrls],
+          };
+        })),
+        totalUnits: units.length,
+        availableUnits: units.filter(u => u.status === 'Available').length,
+        hasUnits: units.length > 0,
         owner: {
           name: formData.ownerName,
           email: formData.ownerEmail,
@@ -629,6 +722,203 @@ export default function EditPropertyPage() {
                     className="w-full px-4 py-3.5 rounded-2xl text-sm text-slate-800 outline-none border border-slate-200 focus:border-slate-500 transition-colors bg-white resize-none"
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* ── Units / Inventory ─────────────────────────────────────── */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="px-8 py-6 border-b border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">Units / Inventory</h2>
+                    <p className="text-xs text-slate-400 mt-0.5">Add or edit individual units of this project</p>
+                  </div>
+                  <button type="button" onClick={addUnit}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+                    style={{ backgroundColor: PRIMARY }}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Unit
+                  </button>
+                </div>
+              </div>
+
+              <div className="px-8 py-6 space-y-5">
+                {units.length === 0 ? (
+                  <div className="border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center">
+                    <svg className="w-10 h-10 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21" />
+                    </svg>
+                    <p className="text-sm text-slate-400">No units yet — click "Add Unit" to add</p>
+                  </div>
+                ) : (
+                  units.map((unit, idx) => (
+                    <div key={unit.id} className="border border-slate-200 rounded-2xl p-5 bg-slate-50">
+                      {/* Header */}
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="font-bold text-slate-700 text-sm">Unit {idx + 1}</span>
+                        <button type="button" onClick={() => removeUnit(unit.id)}
+                          className="text-xs text-red-400 hover:text-red-600 font-semibold flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          Remove
+                        </button>
+                      </div>
+
+                      {/* Fields grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {([
+                          { key: 'unitNo',       label: 'Unit No.',         ph: 'e.g. A-101' },
+                          { key: 'floor',        label: 'Floor',            ph: 'e.g. 4th Floor' },
+                          { key: 'type',         label: 'Type',             ph: 'e.g. Office Space' },
+                          { key: 'size',         label: 'Size',             ph: 'e.g. 800 sq.ft.' },
+                          { key: 'price',        label: 'Price',            ph: 'e.g. ₹50,000' },
+                          { key: 'facing',       label: 'Facing',           ph: 'e.g. East' },
+                          { key: 'meetingRooms', label: 'Meeting Rooms',    ph: 'e.g. 2' },
+                          { key: 'cabins',       label: 'Cabins',           ph: 'e.g. 3' },
+                        ] as { key: keyof EditUnit; label: string; ph: string }[]).map(({ key, label, ph }) => (
+                          <div key={key}>
+                            <label className="block text-xs font-semibold text-slate-500 mb-1">{label}</label>
+                            <input type="text" value={unit[key] as string}
+                              onChange={e => updateUnit(unit.id, key, e.target.value)}
+                              placeholder={ph}
+                              className="w-full px-3 py-2 rounded-xl border text-sm text-slate-800 outline-none bg-white transition-colors"
+                              style={{ borderColor: (unit[key] as string) ? PRIMARY : '#e2e8f0' }} />
+                          </div>
+                        ))}
+
+                        {/* Status */}
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-500 mb-1">Status</label>
+                          <select value={unit.status} onChange={e => updateUnit(unit.id, 'status', e.target.value)}
+                            className="w-full px-3 py-2 rounded-xl border text-sm text-slate-800 outline-none bg-white"
+                            style={{ borderColor: PRIMARY }}>
+                            <option>Available</option>
+                            <option>Booked</option>
+                            <option>Sold</option>
+                          </select>
+                        </div>
+
+                        {/* Remarks */}
+                        <div className="col-span-2">
+                          <label className="block text-xs font-semibold text-slate-500 mb-1">Remarks</label>
+                          <input type="text" value={unit.remarks}
+                            onChange={e => updateUnit(unit.id, 'remarks', e.target.value)}
+                            placeholder="e.g. Corner unit, sea facing"
+                            className="w-full px-3 py-2 rounded-xl border text-sm text-slate-800 outline-none bg-white transition-colors"
+                            style={{ borderColor: unit.remarks ? PRIMARY : '#e2e8f0' }} />
+                        </div>
+
+                        {/* Overview */}
+                        <div className="col-span-2 sm:col-span-3">
+                          <label className="block text-xs font-semibold text-slate-500 mb-1">Unit Overview</label>
+                          <textarea rows={3} value={unit.overview}
+                            onChange={e => updateUnit(unit.id, 'overview', e.target.value)}
+                            placeholder="Describe this unit..."
+                            className="w-full px-3 py-2 rounded-xl border text-sm text-slate-800 outline-none bg-white resize-none transition-colors"
+                            style={{ borderColor: unit.overview ? PRIMARY : '#e2e8f0' }} />
+                        </div>
+                      </div>
+
+                      {/* Images */}
+                      <div className="mt-4 pt-4 border-t border-slate-200">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Unit Photos</label>
+
+                        {/* Existing URLs */}
+                        {unit.imageUrls.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {unit.imageUrls.map((url, ii) => (
+                              <div key={ii} className="relative group">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={url} alt="" className="w-16 h-16 object-cover rounded-xl border border-slate-200" />
+                                <button type="button" onClick={() => removeUnitImageUrl(unit.id, ii)}
+                                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* New file uploads */}
+                        {unit.imageFiles.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {unit.imageFiles.map((f, ii) => (
+                              <div key={ii} className="relative group">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={URL.createObjectURL(f)} alt="" className="w-16 h-16 object-cover rounded-xl border-2 border-dashed border-blue-300" />
+                                <button type="button" onClick={() => removeUnitImageFile(unit.id, ii)}
+                                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                                <span className="absolute bottom-0 left-0 right-0 text-center text-[8px] text-blue-600 bg-white/80 rounded-b-xl">new</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <label className="flex items-center gap-2 px-4 py-2.5 border-2 border-dashed rounded-xl cursor-pointer hover:bg-white transition-colors w-fit"
+                          style={{ borderColor: '#e2e8f0' }}>
+                          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                          </svg>
+                          <span className="text-xs text-slate-500 font-medium">Add Photos</span>
+                          <input type="file" accept="image/*" multiple className="hidden"
+                            onChange={e => e.target.files && addUnitImages(unit.id, Array.from(e.target.files))} />
+                        </label>
+                      </div>
+
+                      {/* Videos */}
+                      <div className="mt-4 pt-4 border-t border-slate-200">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Unit Videos</label>
+
+                        {/* Existing video URLs */}
+                        {unit.videoUrls.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {unit.videoUrls.map((url, ii) => (
+                              <div key={ii} className="relative group flex items-center gap-1.5 bg-slate-100 rounded-xl px-3 py-2">
+                                <svg className="w-4 h-4 text-slate-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M8 5v14l11-7z" />
+                                </svg>
+                                <span className="text-xs text-slate-600 max-w-[120px] truncate">Video {ii + 1}</span>
+                                <button type="button" onClick={() => removeUnitVideoUrl(unit.id, ii)}
+                                  className="text-red-400 hover:text-red-600 text-xs ml-1">✕</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* New video files */}
+                        {unit.videoFiles.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {unit.videoFiles.map((f, ii) => (
+                              <div key={ii} className="relative flex items-center gap-1.5 bg-blue-50 border border-dashed border-blue-300 rounded-xl px-3 py-2">
+                                <svg className="w-4 h-4 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M8 5v14l11-7z" />
+                                </svg>
+                                <span className="text-xs text-blue-600 max-w-[120px] truncate">{f.name}</span>
+                                <span className="text-[8px] text-blue-400 bg-blue-100 px-1 rounded">new</span>
+                                <button type="button" onClick={() => removeUnitVideoFile(unit.id, ii)}
+                                  className="text-red-400 hover:text-red-600 text-xs ml-1">✕</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <label className="flex items-center gap-2 px-4 py-2.5 border-2 border-dashed rounded-xl cursor-pointer hover:bg-white transition-colors w-fit"
+                          style={{ borderColor: '#e2e8f0' }}>
+                          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.867v6.266a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-xs text-slate-500 font-medium">Add Videos</span>
+                          <input type="file" accept="video/*" multiple className="hidden"
+                            onChange={e => e.target.files && addUnitVideos(unit.id, Array.from(e.target.files))} />
+                        </label>
+                      </div>
+                    </div>
+                  ))
+                )}
+                {units.length > 0 && (
+                  <p className="text-xs text-slate-400 text-right">{units.length} unit{units.length > 1 ? 's' : ''}</p>
+                )}
               </div>
             </div>
 
