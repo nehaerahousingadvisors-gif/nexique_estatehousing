@@ -16,7 +16,7 @@ function StatusBadge({ status }: { status: string }) {
 interface UnitData {
   unitNo?: string; floor?: string; type?: string; size?: string;
   price?: string; status?: string; facing?: string; remarks?: string;
-  overview?: string; meetingRooms?: string; cabins?: string;
+  overview?: string; meetingRooms?: string; cabins?: string; maxSeats?: string;
   imageUrls?: string[]; videoUrls?: string[];
 }
 
@@ -307,6 +307,7 @@ function UnitInventorySection({ units, totalUnits, availableUnits }: {
                       { label: 'Size',  value: unit.size  },
                       { label: 'Mtg',   value: unit.meetingRooms },
                       { label: 'Cabin', value: unit.cabins },
+                      { label: 'Seats', value: unit.maxSeats },
                       { label: 'Face',  value: unit.facing },
                     ] as { label: string; value?: string }[])
                       .filter(x => x.value)
@@ -379,6 +380,7 @@ interface Project {
     overview?: string;
     meetingRooms?: string;
     cabins?: string;
+    maxSeats?: string;
     imageUrls?: string[];
     videoUrls?: string[];
   }[];

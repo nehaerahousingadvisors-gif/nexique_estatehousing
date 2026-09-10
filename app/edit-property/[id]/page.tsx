@@ -15,7 +15,7 @@ interface EditUnit {
   id: string;
   unitNo: string; floor: string; type: string; size: string;
   price: string; status: string; facing: string; remarks: string;
-  overview: string; meetingRooms: string; cabins: string;
+  overview: string; meetingRooms: string; cabins: string; maxSeats: string;
   imageUrls: string[];   // already-uploaded URLs from Firebase
   videoUrls: string[];
   imageFiles: File[];    // new files to upload
@@ -66,7 +66,7 @@ export default function EditPropertyPage() {
     id: Date.now().toString(),
     unitNo: '', floor: '', type: '', size: '', price: '',
     status: 'Available', facing: '', remarks: '', overview: '',
-    meetingRooms: '', cabins: '', imageUrls: [], videoUrls: [], imageFiles: [], videoFiles: [],
+    meetingRooms: '', cabins: '', maxSeats: '', imageUrls: [], videoUrls: [], imageFiles: [], videoFiles: [],
   }]);
   const removeUnit = (id: string) => setUnits(prev => prev.filter(u => u.id !== id));
   const updateUnit = (id: string, field: keyof EditUnit, value: string) =>
@@ -204,7 +204,7 @@ export default function EditPropertyPage() {
             unitNo: u.unitNo || '', floor: u.floor || '', type: u.type || '',
             size: u.size || '', price: u.price || '', status: u.status || 'Available',
             facing: u.facing || '', remarks: u.remarks || '', overview: u.overview || '',
-            meetingRooms: u.meetingRooms || '', cabins: u.cabins || '',
+            meetingRooms: u.meetingRooms || '', cabins: u.cabins || '', maxSeats: u.maxSeats || '',
             imageUrls: Array.isArray(u.imageUrls) ? u.imageUrls : [],
             videoUrls: Array.isArray(u.videoUrls) ? u.videoUrls : [],
             imageFiles: [],
@@ -778,6 +778,7 @@ export default function EditPropertyPage() {
                           { key: 'facing',       label: 'Facing',           ph: 'e.g. East' },
                           { key: 'meetingRooms', label: 'Meeting Rooms',    ph: 'e.g. 2' },
                           { key: 'cabins',       label: 'Cabins',           ph: 'e.g. 3' },
+                          { key: 'maxSeats',     label: 'Max Seats',        ph: 'e.g. 50' },
                         ] as { key: keyof EditUnit; label: string; ph: string }[]).map(({ key, label, ph }) => (
                           <div key={key}>
                             <label className="block text-xs font-semibold text-slate-500 mb-1">{label}</label>

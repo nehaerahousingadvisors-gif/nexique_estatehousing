@@ -34,6 +34,7 @@ interface Unit {
   overview: string;
   meetingRooms: string;
   cabins: string;
+  maxSeats: string;
   imageFiles: File[];   // local files before upload
   videoFiles: File[];
   imageUrls: string[];  // uploaded URLs
@@ -825,7 +826,7 @@ export default function PostPropertyPage() {
 
   const addUnit = () => setUnits(prev => [...prev, {
     id: Date.now().toString(),
-    unitNo: '', floor: '', type: '', size: '', price: '', status: 'Available', facing: '', remarks: '', overview: '', meetingRooms: '', cabins: '',
+    unitNo: '', floor: '', type: '', size: '', price: '', status: 'Available', facing: '', remarks: '', overview: '', meetingRooms: '', cabins: '', maxSeats: '',
     imageFiles: [], videoFiles: [], imageUrls: [], videoUrls: [],
   }]);
   const removeUnit = (id: string) => setUnits(prev => prev.filter(u => u.id !== id));
@@ -1452,6 +1453,7 @@ export default function PostPropertyPage() {
                                 { key: 'facing',       label: 'Facing',           placeholder: 'e.g. East' },
                                 { key: 'meetingRooms', label: 'No. of Meeting Rooms', placeholder: 'e.g. 2' },
                                 { key: 'cabins',       label: 'No. of Cabins',    placeholder: 'e.g. 4' },
+                                { key: 'maxSeats',     label: 'Max Seats',        placeholder: 'e.g. 50' },
                               ] as { key: keyof Unit; label: string; placeholder: string }[]).map(({ key, label, placeholder }) => (
                                 <div key={key}>
                                   <label className="block text-xs font-semibold text-slate-500 mb-1">{label}</label>
@@ -1927,6 +1929,7 @@ export default function PostPropertyPage() {
                                 { key: 'facing',       label: 'Facing',               placeholder: 'e.g. North-East' },
                                 { key: 'meetingRooms', label: 'No. of Meeting Rooms', placeholder: 'e.g. 2' },
                                 { key: 'cabins',       label: 'No. of Cabins',        placeholder: 'e.g. 4' },
+                                { key: 'maxSeats',     label: 'Max Seats',            placeholder: 'e.g. 50' },
                               ] as { key: keyof Unit; label: string; placeholder: string }[]).map(({ key, label, placeholder }) => (
                                 <div key={key}>
                                   <label className="block text-xs font-semibold text-slate-500 mb-1">{label}</label>
