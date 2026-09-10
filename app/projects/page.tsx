@@ -1,8 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, Suspense, useCallback } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import ProjectDetail from '@/components/ProjectDetail';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -290,6 +290,7 @@ export default function ProjectsPage() {
 /* ─── Main content ─────────────────────────────────────────────────────────── */
 function ProjectsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [selectedCategory,   setSelectedCategory]   = useState('All');
   const [selectedProject,    setSelectedProject]    = useState<Project | null>(null);
   const [firestoreProjects,  setFirestoreProjects]  = useState<Project[]>([]);
@@ -298,6 +299,24 @@ function ProjectsContent() {
   // Commercial sub-filters (mirrors FeaturedProjects)
   const [commercialPurpose,  setCommercialPurpose]  = useState<'Lease' | 'Sale' | null>(null);
   const [commercialLocation, setCommercialLocation] = useState<string | null>(null);
+
+  // ── Open/close project with URL sync ─────────────────────────────────────
+  const openProject = useCallback((project: Project) => {
+    setSelectedProject(project);
+    if (project.firestoreId) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('id', project.firestoreId);
+      router.push(`/projects?${params.toString()}`, { scroll: false });
+    }
+  }, [router, searchParams]);
+
+  const closeProject = useCallback(() => {
+    setSelectedProject(null);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('id');
+    const qs = params.toString();
+    router.push(qs ? `/projects?${qs}` : '/projects', { scroll: false });
+  }, [router, searchParams]);
 
   // ── Fetch from Firestore ──────────────────────────────────────────────────
   useEffect(() => {
@@ -469,7 +488,7 @@ function ProjectsContent() {
                 <div
                   key={project.id}
                   className="group relative bg-white rounded-2xl overflow-hidden border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer"
-                  onClick={() => setSelectedProject(project)}
+                  onClick={() => openProject(project)}
                 >
                   {/* Image */}
                   <div className="relative h-52 sm:h-64 overflow-hidden">
@@ -557,7 +576,7 @@ function ProjectsContent() {
       {selectedProject && (
         <ProjectDetail
           project={selectedProject}
-          onClose={() => setSelectedProject(null)}
+          onClose={() => closeProject()}
         />
       )}
     </div>

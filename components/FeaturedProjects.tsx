@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import ProjectDetail from './ProjectDetail';
 import { collection, getDocs, query } from 'firebase/firestore';
@@ -265,6 +265,19 @@ export default function FeaturedProjects({
   const [commercialLocation, setCommercialLocation] = useState<string | null>(null);
   const [projects,           setProjects]           = useState<FProject[]>([]);
 
+  // ── Open/close project with URL sync ─────────────────────────────────────
+  const openProject = useCallback((project: FProject) => {
+    setSelectedProject(project);
+    if (project.firestoreId) {
+      router.push(`/projects?id=${project.firestoreId}`, { scroll: false });
+    }
+  }, [router]);
+
+  const closeProject = useCallback(() => {
+    setSelectedProject(null);
+    router.back();
+  }, [router]);
+
   useEffect(() => {
     (async () => {
       try {
@@ -439,7 +452,7 @@ export default function FeaturedProjects({
               <div
                 key={project.id}
                 className="group relative bg-white rounded-2xl border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
-                onClick={() => setSelectedProject(project)}
+                onClick={() => openProject(project)}
               >
                 <div className="relative h-52 sm:h-64">
                   <Image
@@ -527,7 +540,7 @@ export default function FeaturedProjects({
         </div>
       </section>
 
-      {selectedProject && <ProjectDetail project={selectedProject} onClose={() => setSelectedProject(null)} />}
+      {selectedProject && <ProjectDetail project={selectedProject} onClose={() => closeProject()} />}
     </>
   );
 }

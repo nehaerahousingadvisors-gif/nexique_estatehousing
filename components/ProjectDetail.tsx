@@ -793,9 +793,12 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
               </a>
               <button
                 onClick={() => {
+                  const base = typeof window !== 'undefined'
+                    ? `${window.location.protocol}//${window.location.host}`
+                    : 'https://www.nexiqueestate.com';
                   const shareUrl = project.firestoreId
-                    ? `https://www.nexiqueestate.com/projects?id=${project.firestoreId}`
-                    : `https://www.nexiqueestate.com/projects`;
+                    ? `${base}/projects?id=${project.firestoreId}`
+                    : `${base}/projects`;
                   if (navigator.share) {
                     navigator.share({ title: project.name, text: `Check out ${project.name} at ${project.location}`, url: shareUrl });
                   } else {
