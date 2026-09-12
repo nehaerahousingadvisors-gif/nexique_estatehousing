@@ -12,7 +12,7 @@ const lexendDeca = Lexend_Deca({
 });
 
 export const metadata: Metadata = {
-  title: "Property for Sale in Noida | Real Estate Consultant | Nexique Estate",
+  title: "Property for Sale in Noida | Real Estate Consultant | Nexique Estate | NEHA",
   description: "Nexique Estate is a trusted real estate consultant in Noida, offering residential and commercial properties for sale and investment.",
   keywords: [
     "Property for Sale in Noida",

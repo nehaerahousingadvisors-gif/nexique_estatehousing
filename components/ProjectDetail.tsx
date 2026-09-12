@@ -536,7 +536,10 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
           {/* Hero Section */}
           <div className="relative">
             {/* Main Media Display with Fullscreen Button */}
-            <div className="relative h-[28vh] sm:h-[40vh] md:h-[50vh] bg-slate-900 group">
+            <div
+              className="relative h-[28vh] sm:h-[40vh] md:h-[50vh] bg-slate-900 group cursor-pointer"
+              onClick={() => setIsFullscreen(true)}
+            >
               {mediaGallery[selectedMediaIndex]?.type === 'image' ? (
                 <Image 
                   src={mediaGallery[selectedMediaIndex]?.url} 
@@ -558,15 +561,15 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
               )}
               {/* Fullscreen Button */}
               <button 
-                onClick={() => setIsFullscreen(true)}
+                onClick={(e) => { e.stopPropagation(); setIsFullscreen(true); }}
                 className="absolute top-4 right-16 z-10 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/60 transition-colors opacity-0 group-hover:opacity-100"
               >
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
               </button>
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 lg:p-12">
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 lg:p-12 pointer-events-none">
                 <p className="text-[10px] sm:text-sm uppercase tracking-widest mb-1 sm:mb-2 truncate text-white">{project.category} • {project.location}</p>
                 <h1 className="text-xl sm:text-3xl md:text-5xl font-bold text-white mb-2 sm:mb-3 leading-tight">{project.name}</h1>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-white text-xs sm:text-base">
@@ -692,15 +695,15 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
           </div>
 
           {/* Details Table */}
-          <div className="px-8 md:px-12 py-10 border-t border-slate-200">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">Project Overview</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full border border-slate-200 rounded-lg overflow-hidden">
+          <div className="px-4 md:px-12 py-8 md:py-10 border-t border-slate-200">
+            <h2 className="text-xl md:text-3xl font-bold text-slate-900 mb-4 md:mb-6">Project Overview</h2>
+            <div className="rounded-xl border border-slate-200 overflow-hidden">
+              <table className="w-full">
                 <tbody>
                   {project.details.map((detail, index) => (
                     <tr key={index} className={index % 2 === 0 ? 'bg-slate-50' : 'bg-white'}>
-                      <td className="px-6 py-3 font-bold text-slate-900 border-b border-slate-200 w-1/3">{detail.label}</td>
-                      <td className="px-6 py-3 text-slate-600 border-b border-slate-200">{detail.value}</td>
+                      <td className="px-3 md:px-6 py-3 font-bold text-slate-900 border-b border-slate-200 text-sm md:text-base align-top w-2/5 md:w-1/3 break-words">{detail.label}</td>
+                      <td className="px-3 md:px-6 py-3 text-slate-600 border-b border-slate-200 text-sm md:text-base break-words">{detail.value}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -731,11 +734,11 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
             {project.amenities && project.amenities.length > 0 && (
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">Amenities</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                   {project.amenities.map((amenity, index) => (
                     <span 
                       key={index}
-                      className="px-5 py-3 bg-slate-200 text-slate-900 font-medium rounded-full"
+                      className="px-3 py-2 bg-slate-200 text-slate-900 font-medium rounded-full text-xs md:text-sm text-center"
                     >
                       {amenity}
                     </span>
