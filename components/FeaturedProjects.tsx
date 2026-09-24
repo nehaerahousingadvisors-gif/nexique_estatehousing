@@ -51,9 +51,20 @@ function toProject(docId: string, d: Record<string, any>, i: number): FProject {
   let price = 'Price on Request';
   if (d.expectedPrice && Number(d.expectedPrice) > 0) {
     const a = Number(d.expectedPrice);
-    price = a >= 10000000 ? `₹${(a / 10000000).toFixed(2).replace(/\.?0+$/, '')} Cr onwards`
-      : a >= 100000 ? `₹${(a / 100000).toFixed(2).replace(/\.?0+$/, '')} Lac onwards`
-      : `₹${a.toLocaleString('en-IN')} onwards`;
+    const isMonthly = d.priceUnit === 'Monthly';
+    const isRentLease = (d.lookingTo || '').toLowerCase().includes('rent') || (d.lookingTo || '').toLowerCase().includes('lease');
+    if (isMonthly && isRentLease) {
+      const label = a >= 10000000
+        ? `₹${(a / 10000000).toFixed(2).replace(/\.?0+$/, '')} Cr/Month`
+        : a >= 100000
+        ? `₹${(a / 100000).toFixed(2).replace(/\.?0+$/, '')} Lac/Month`
+        : `₹${a.toLocaleString('en-IN')}/Month`;
+      price = label;
+    } else {
+      price = a >= 10000000 ? `₹${(a / 10000000).toFixed(2).replace(/\.?0+$/, '')} Cr onwards`
+        : a >= 100000 ? `₹${(a / 100000).toFixed(2).replace(/\.?0+$/, '')} Lac onwards`
+        : `₹${a.toLocaleString('en-IN')} onwards`;
+    }
   } else if (d.price) price = d.price;
   // Determine category — check both propertyCategory AND propertyType to handle
   // all cases from the post-property form (Commercial checkbox + sub-type)
@@ -79,7 +90,7 @@ function toProject(docId: string, d: Record<string, any>, i: number): FProject {
     purpose: d.lookingTo || '',
     price, category: cat, isExclusive: false, image, heroImage,
     status: d.availability || d.status || 'Ready to Move',
-    launchYear: d.launchYear || String(new Date().getFullYear()),
+    launchYear: d.launchYear || '',
     developer: d.developer || d.developerName || '',
     reraNumber: d.reraNumber || '',
     overview: d.overview || `A property in ${d.city || 'NCR'}.`,

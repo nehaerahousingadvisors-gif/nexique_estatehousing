@@ -92,7 +92,7 @@ export default function AboutPage() {
               <div className="absolute -top-4 -left-4 -right-4 -bottom-4 bg-gradient-to-br from-slate-200 to-slate-300 rounded-3xl -z-10"></div>
               <div className="relative">
                 <Image
-                  src="/neha011.jpeg"
+                  src="/mam12.jpeg"
                   alt="Ms. Neha Rathee - Director & CEO"
                   width={600}
                   height={700}
@@ -113,20 +113,28 @@ export default function AboutPage() {
               </p>
               
               <div className="flex items-center gap-4">
-                <a href="#" className="w-10 h-10 rounded-full flex items-center justify-center transition-colors" style={{ backgroundColor: '#1a2744' }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#131e36')} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#1a2744')}>
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.176.054 1.856.215 2.408.437a4.907 4.907 0 0 1 1.771 1.153 4.907 4.907 0 0 1 1.153 1.771c.222.552.383 1.232.437 2.408.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.054 1.176-.215 1.856-.437 2.408a4.907 4.907 0 0 1-1.153 1.771 4.907 4.907 0 0 1-1.771 1.153c-.552.222-1.232.383-2.408.437-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.176-.054-1.856-.215-2.408-.437a4.907 4.907 0 0 1-1.771-1.153 4.907 4.907 0 0 1-1.153-1.771c-.222-.552-.383-1.232-.437-2.408-.058-1.266-.07-1.646-.07-4.85s.012-3.584.07-4.85c.054-1.176.215-1.856.437-2.408a4.907 4.907 0 0 1 1.153-1.771 4.907 4.907 0 0 1 1.771-1.153c.552-.222 1.232-.383 2.408-.437 1.266-.058 1.646-.07 4.85-.07zm0-2.163c-3.259 0-3.667.014-4.947.072-1.273.058-2.068.233-2.758.494a6.999 6.999 0 0 0-2.536 1.65 6.999 6.999 0 0 0-1.65 2.536c-.261.69-.436 1.485-.494 2.758-.058 1.28-.072 1.688-.072 4.947s.014 3.667.072 4.947c.058 1.273.233 2.068.494 2.758a6.999 6.999 0 0 0 1.65 2.536 6.999 6.999 0 0 0 2.536 1.65c.69.261 1.485.436 2.758.494 1.28.058 1.688.072 4.947.072s3.667-.014 3.947.072c1.273-.058 2.068-.233 2.758-.494a6.999 6.999 0 0 0 2.536-1.65 6.999 6.999 0 0 0 1.65-2.536c.261-.69.436-1.485.494-2.758.058-1.28.072-1.688.072-4.947s-.058-3.667-.072-3.947c-.058-1.273-.233-2.068-.494-2.758a6.999 6.999 0 0 0-1.65-2.536 6.999 6.999 0 0 0-2.536-1.65c-.69-.261-1.485-.436-2.758-.494-1.28-.058-1.688-.072-4.947-.072zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.538-10.655a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/>
+                {/* Instagram */}
+                <a href="https://www.instagram.com/real.estatewithneha/" target="_blank" rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                  style={{ background: 'radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%)' }}>
+                  <svg className="w-5 h-5" fill="white" viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.176.054 1.856.215 2.408.437a4.907 4.907 0 0 1 1.771 1.153 4.907 4.907 0 0 1 1.153 1.771c.222.552.383 1.232.437 2.408.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.054 1.176-.215 1.856-.437 2.408a4.907 4.907 0 0 1-1.153 1.771 4.907 4.907 0 0 1-1.771 1.153c-.552.222-1.232.383-2.408.437-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.176-.054-1.856-.215-2.408-.437a4.907 4.907 0 0 1-1.771-1.153 4.907 4.907 0 0 1-1.153-1.771c-.222-.552-.383-1.232-.437-2.408-.058-1.266-.07-1.646-.07-4.85s.012-3.584.07-4.85c.054-1.176.215-1.856.437-2.408a4.907 4.907 0 0 1 1.153-1.771 4.907 4.907 0 0 1 1.771-1.153c.552-.222 1.232-.383 2.408-.437 1.266-.058 1.646-.07 4.85-.07zm0-2.163c-3.259 0-3.667.014-4.947.072-1.273.058-2.068.233-2.758.494a6.999 6.999 0 0 0-2.536 1.65 6.999 6.999 0 0 0-1.65 2.536c-.261.69-.436 1.485-.494 2.758C.014 8.333 0 8.741 0 12s.014 3.667.072 4.947c.058 1.273.233 2.068.494 2.758a6.999 6.999 0 0 0 1.65 2.536 6.999 6.999 0 0 0 2.536 1.65c.69.261 1.485.436 2.758.494C8.333 23.986 8.741 24 12 24s3.667-.014 4.947-.072c1.273-.058 2.068-.233 2.758-.494a6.999 6.999 0 0 0 2.536-1.65 6.999 6.999 0 0 0 1.65-2.536c.261-.69.436-1.485.494-2.758C23.986 15.667 24 15.259 24 12s-.014-3.667-.072-4.947c-.058-1.273-.233-2.068-.494-2.758a6.999 6.999 0 0 0-1.65-2.536 6.999 6.999 0 0 0-2.536-1.65c-.69-.261-1.485-.436-2.758-.494C15.667.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
                   </svg>
                 </a>
-                <a href="#" className="w-10 h-10 rounded-full flex items-center justify-center transition-colors" style={{ backgroundColor: '#1a2744' }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#131e36')} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#1a2744')}>
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                {/* LinkedIn */}
+                <a href="https://www.linkedin.com/in/neha-rathee-445693211/" target="_blank" rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                  style={{ backgroundColor: '#0A66C2' }}>
+                  <svg className="w-5 h-5" fill="white" viewBox="0 0 24 24">
                     <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
                   </svg>
                 </a>
                 {/* YouTube */}
-                <a href="https://www.youtube.com/@NewEraHousingAdvisors" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full flex items-center justify-center transition-colors" style={{ backgroundColor: '#1a2744' }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#131e36')} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#1a2744')}>
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+                <a href="https://www.youtube.com/@real.estatewithneha" target="_blank" rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                  style={{ backgroundColor: '#FF0000' }}>
+                  <svg className="w-5 h-5" fill="white" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                   </svg>
                 </a>
                 <a 

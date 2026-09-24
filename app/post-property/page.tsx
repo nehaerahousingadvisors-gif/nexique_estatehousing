@@ -16,7 +16,7 @@ type ResidentialType =
   | 'Farmhouse' | 'Other';
 type Furnishing = 'Furnished' | 'Semi-furnished' | 'Un-furnished';
 type AvailabilityStatus = 'Ready to move' | 'Under construction';
-type PriceUnit = 'Total Price' | 'Per sq.ft.' | 'Per sq.m.' | 'Per sq.yd.';
+type PriceUnit = 'Total Price' | 'Monthly' | 'Per sq.ft.' | 'Per sq.m.' | 'Per sq.yd.';
 type MaintenanceUnit = 'Monthly' | 'Yearly';
 type BookingUnit = 'Fixed' | 'Percentage';
 
@@ -28,6 +28,7 @@ interface Unit {
   type: string;
   size: string;
   price: string;
+  priceUnit: 'Monthly' | 'Yearly' | '';
   status: string;
   facing: string;
   remarks: string;
@@ -657,7 +658,7 @@ export default function PostPropertyPage() {
         units: units.map(({ id, imageFiles, videoFiles, ...rest }) => ({
           ...rest,
           price: rest.price && /^\d+$/.test(rest.price.replace(/,/g, ''))
-            ? `₹${Number(rest.price.replace(/,/g, '')).toLocaleString('en-IN')} onwards`
+            ? `₹${Number(rest.price.replace(/,/g, '')).toLocaleString('en-IN')}${rest.priceUnit ? '/' + rest.priceUnit : ' onwards'}`
             : rest.price,
         })),
         hasUnits: units.length > 0,
@@ -695,7 +696,7 @@ export default function PostPropertyPage() {
         location: projectLocation || `${locality || 'Location'}, ${city || 'City'}`,
         status: availability || 'Ready to move',
         developer: developerName || '',
-        launchYear: new Date().getFullYear().toString(),
+        launchYear: launchYear || '',
         overview: propertyOverview || `A ${selectedType || 'property'} in ${locality || city} for ${lookingTo || 'Sale'}`,
         area: plotArea ? `${plotArea} ${plotUnit}` : '',
         configurations: configurations.length > 0 ? configurations : (bedrooms ? [`${bedrooms} BHK`] : []),
@@ -815,6 +816,7 @@ export default function PostPropertyPage() {
   const [totalTowers, setTotalTowers] = useState('');
   const [totalResidences, setTotalResidences] = useState('');
   const [reraNumber, setReraNumber] = useState('');
+  const [launchYear, setLaunchYear] = useState('');
   const [configurations, setConfigurations] = useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [connectivityHighlights, setConnectivityHighlights] = useState<string[]>(['', '', '', '']);
@@ -826,7 +828,7 @@ export default function PostPropertyPage() {
 
   const addUnit = () => setUnits(prev => [...prev, {
     id: Date.now().toString(),
-    unitNo: '', floor: '', type: '', size: '', price: '', status: 'Available', facing: '', remarks: '', overview: '', meetingRooms: '', cabins: '', maxSeats: '',
+    unitNo: '', floor: '', type: '', size: '', price: '', priceUnit: '', status: 'Available', facing: '', remarks: '', overview: '', meetingRooms: '', cabins: '', maxSeats: '',
     imageFiles: [], videoFiles: [], imageUrls: [], videoUrls: [],
   }]);
   const removeUnit = (id: string) => setUnits(prev => prev.filter(u => u.id !== id));
@@ -1312,6 +1314,7 @@ export default function PostPropertyPage() {
                         { label: 'Developer', value: developerName, set: setDeveloperName, placeholder: 'e.g. ABC Developers' },
                         { label: 'Location', value: projectLocation, set: setProjectLocation, placeholder: 'e.g. Sector 16, Noida' },
                         { label: 'Total Floors', value: totalTowers, set: setTotalTowers, placeholder: 'e.g. 28 Floors' },
+                        { label: 'Launch Year', value: launchYear, set: setLaunchYear, placeholder: 'e.g. 2024' },
                         { label: 'RERA Number', value: reraNumber, set: setReraNumber, placeholder: 'e.g. UPRERAPRJ123456/2024' },
                       ].map(({ label, value, set, placeholder }) => (
                         <div key={label} className="grid grid-cols-2 gap-3 items-center border-b border-gray-50 pb-2">
@@ -1449,7 +1452,6 @@ export default function PostPropertyPage() {
                                 { key: 'floor',        label: 'Floor',            placeholder: 'e.g. 1st Floor' },
                                 { key: 'type',         label: 'Type',             placeholder: 'e.g. Office, Shop' },
                                 { key: 'size',         label: 'Size',             placeholder: 'e.g. 800 sq.ft.' },
-                                { key: 'price',        label: 'Price',            placeholder: 'e.g. ₹45 Lac' },
                                 { key: 'facing',       label: 'Facing',           placeholder: 'e.g. East' },
                                 { key: 'meetingRooms', label: 'No. of Meeting Rooms', placeholder: 'e.g. 2' },
                                 { key: 'cabins',       label: 'No. of Cabins',    placeholder: 'e.g. 4' },
@@ -1463,6 +1465,38 @@ export default function PostPropertyPage() {
                                     style={{ borderColor: (unit[key] as string) ? PRIMARY : '#e2e8f0' }} />
                                 </div>
                               ))}
+
+                              {/* Price + Monthly/Yearly toggle */}
+                              <div className="col-span-2 sm:col-span-1">
+                                <label className="block text-xs font-semibold text-slate-500 mb-1">Price</label>
+                                <div className="flex gap-1.5">
+                                  <input
+                                    type="text"
+                                    value={unit.price}
+                                    onChange={e => updateUnit(unit.id, 'price', e.target.value)}
+                                    placeholder="e.g. ₹45 Lac"
+                                    className="flex-1 min-w-0 px-3 py-2 rounded-lg border text-sm text-slate-700 outline-none bg-white transition-colors"
+                                    style={{ borderColor: unit.price ? PRIMARY : '#e2e8f0' }}
+                                  />
+                                  <div className="flex rounded-lg border overflow-hidden flex-shrink-0" style={{ borderColor: '#e2e8f0' }}>
+                                    {(['Monthly', 'Yearly'] as const).map((opt) => (
+                                      <button
+                                        key={opt}
+                                        type="button"
+                                        onClick={() => updateUnit(unit.id, 'priceUnit', unit.priceUnit === opt ? '' : opt)}
+                                        className="px-2 py-1 text-[10px] font-semibold transition-colors"
+                                        style={{
+                                          backgroundColor: unit.priceUnit === opt ? PRIMARY : 'white',
+                                          color: unit.priceUnit === opt ? 'white' : '#94a3b8',
+                                          borderRight: opt === 'Monthly' ? '1px solid #e2e8f0' : 'none',
+                                        }}
+                                      >
+                                        {opt === 'Monthly' ? 'Mo' : 'Yr'}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
                               <div>
                                 <label className="block text-xs font-semibold text-slate-500 mb-1">Status</label>
                                 <select value={unit.status} onChange={e => updateUnit(unit.id, 'status', e.target.value)}
@@ -1762,6 +1796,7 @@ export default function PostPropertyPage() {
                         { label: 'Developer', value: developerName, set: setDeveloperName, placeholder: 'e.g. Vaastu Builders' },
                         { label: 'Total Towers', value: totalTowers, set: setTotalTowers, placeholder: 'e.g. 3 Towers' },
                         { label: 'Total Residences', value: totalResidences, set: setTotalResidences, placeholder: 'e.g. 250 Residences' },
+                        { label: 'Launch Year', value: launchYear, set: setLaunchYear, placeholder: 'e.g. 2024' },
                         { label: 'RERA Number', value: reraNumber, set: setReraNumber, placeholder: 'e.g. UPRERAPRJ123456/2024' },
                       ].map(({ label, value, set, placeholder }) => (
                         <div key={label} className="grid grid-cols-2 gap-3 items-center border-b border-gray-50 pb-2">
@@ -2122,6 +2157,7 @@ export default function PostPropertyPage() {
                     style={{ borderColor: '#d1d5db' }}
                   >
                     <option>Total Price</option>
+                    {lookingTo === 'Rent / Lease' && <option>Monthly</option>}
                     <option>Per sq.ft.</option>
                     <option>Per sq.m.</option>
                     <option>Per sq.yd.</option>

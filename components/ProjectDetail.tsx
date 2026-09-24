@@ -15,7 +15,7 @@ function StatusBadge({ status }: { status: string }) {
 // ── Unit type ────────────────────────────────────────────────────────────────
 interface UnitData {
   unitNo?: string; floor?: string; type?: string; size?: string;
-  price?: string; status?: string; facing?: string; remarks?: string;
+  price?: string; priceUnit?: string; status?: string; facing?: string; remarks?: string;
   overview?: string; meetingRooms?: string; cabins?: string; maxSeats?: string;
   imageUrls?: string[]; videoUrls?: string[];
 }
@@ -293,9 +293,22 @@ function UnitInventorySection({ units, totalUnits, availableUnits }: {
                     <div className="mb-2">
                       <p className="text-[10px] text-slate-400 uppercase tracking-wide">Starting at</p>
                       <p className="text-sm sm:text-base font-black" style={{ color: '#1a2744' }}>
-                        {/^\d+$/.test(unit.price.replace(/,/g, ''))
-                          ? `₹${Number(unit.price.replace(/,/g, '')).toLocaleString('en-IN')} onwards`
-                          : unit.price}
+                        {(() => {
+                          const raw = unit.price.replace(/,/g, '');
+                          const suffix = unit.priceUnit === 'Monthly' ? '/Month'
+                            : unit.priceUnit === 'Yearly' ? '/Year' : '';
+                          if (/^\d+$/.test(raw)) {
+                            const amt = Number(raw);
+                            const formatted = amt >= 10000000
+                              ? `₹${(amt / 10000000).toFixed(2).replace(/\.?0+$/, '')} Cr`
+                              : amt >= 100000
+                              ? `₹${(amt / 100000).toFixed(2).replace(/\.?0+$/, '')} Lac`
+                              : `₹${amt.toLocaleString('en-IN')}`;
+                            return suffix ? `${formatted}${suffix}` : `${formatted} onwards`;
+                          }
+                          // Already formatted string — append suffix if not already present
+                          return suffix && !unit.price.includes('/') ? `${unit.price}${suffix}` : unit.price;
+                        })()}
                       </p>
                     </div>
                   )}
@@ -652,6 +665,7 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
                   <p className="text-sm font-bold text-slate-900">{project.status}</p>
                 </div>
               </div>
+              {project.launchYear && (
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -663,6 +677,7 @@ export default function ProjectDetail({ project, onClose }: ProjectDetailProps) 
                   <p className="text-sm font-bold text-slate-900">{project.launchYear}</p>
                 </div>
               </div>
+              )}
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

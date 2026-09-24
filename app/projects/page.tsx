@@ -78,11 +78,21 @@ function firestoreDocToProject(docId: string, data: Record<string, any>, startId
   let price = 'Price on Request';
   if (data.expectedPrice && Number(data.expectedPrice) > 0) {
     const amt = Number(data.expectedPrice);
-    price = amt >= 10000000
-      ? `₹${(amt / 10000000).toFixed(2).replace(/\.?0+$/, '')} Cr onwards`
-      : amt >= 100000
+    const isMonthly = data.priceUnit === 'Monthly';
+    const isRentLease = (data.lookingTo || '').toLowerCase().includes('rent') || (data.lookingTo || '').toLowerCase().includes('lease');
+    if (isMonthly && isRentLease) {
+      price = amt >= 10000000
+        ? `₹${(amt / 10000000).toFixed(2).replace(/\.?0+$/, '')} Cr/Month`
+        : amt >= 100000
+        ? `₹${(amt / 100000).toFixed(2).replace(/\.?0+$/, '')} Lac/Month`
+        : `₹${amt.toLocaleString('en-IN')}/Month`;
+    } else {
+      price = amt >= 10000000
+        ? `₹${(amt / 10000000).toFixed(2).replace(/\.?0+$/, '')} Cr onwards`
+        : amt >= 100000
         ? `₹${(amt / 100000).toFixed(2).replace(/\.?0+$/, '')} Lac onwards`
         : `₹${amt.toLocaleString('en-IN')} onwards`;
+    }
   } else if (data.price) {
     price = data.price;
   }
@@ -118,7 +128,7 @@ function firestoreDocToProject(docId: string, data: Record<string, any>, startId
     image,
     heroImage,
     status:    data.availability || data.status || 'Ready to Move',
-    launchYear: data.launchYear || new Date().getFullYear().toString(),
+    launchYear: data.launchYear || '',
     developer:  data.developer || data.developerName || '',
     reraNumber: data.reraNumber || '',
     overview:   data.overview || `A ${data.propertyType || 'property'} in ${data.city || 'NCR'}.`,

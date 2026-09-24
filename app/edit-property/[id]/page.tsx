@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '@/lib/firebase';
 
@@ -14,7 +14,7 @@ const PRIMARY = '#1a2744';
 interface EditUnit {
   id: string;
   unitNo: string; floor: string; type: string; size: string;
-  price: string; status: string; facing: string; remarks: string;
+  price: string; priceUnit: 'Monthly' | 'Yearly' | ''; status: string; facing: string; remarks: string;
   overview: string; meetingRooms: string; cabins: string; maxSeats: string;
   imageUrls: string[];   // already-uploaded URLs from Firebase
   videoUrls: string[];
@@ -26,6 +26,8 @@ interface PropertyForm {
   name: string;
   location: string;
   price: string;
+  expectedPrice: string;
+  priceUnit: string;
   category: string;
   status: string;
   developer: string;
@@ -64,7 +66,7 @@ export default function EditPropertyPage() {
 
   const addUnit = () => setUnits(prev => [...prev, {
     id: Date.now().toString(),
-    unitNo: '', floor: '', type: '', size: '', price: '',
+    unitNo: '', floor: '', type: '', size: '', price: '', priceUnit: '',
     status: 'Available', facing: '', remarks: '', overview: '',
     meetingRooms: '', cabins: '', maxSeats: '', imageUrls: [], videoUrls: [], imageFiles: [], videoFiles: [],
   }]);
@@ -89,6 +91,8 @@ export default function EditPropertyPage() {
     name: '',
     location: '',
     price: '',
+    expectedPrice: '',
+    priceUnit: '',
     category: 'Residential',
     status: 'Ready to move',
     developer: '',
@@ -171,6 +175,8 @@ export default function EditPropertyPage() {
           name: data.projectName || data.name || data.title || '',
           location: data.projectLocation || data.location || data.address || fromDetails('location') || '',
           price: data.price || data.priceRange || data.startingPrice || '',
+          expectedPrice: data.expectedPrice ? String(data.expectedPrice) : '',
+          priceUnit: data.priceUnit || '',
           category: data.category || data.propertyCategory || data.type || data.propertyType || 'Residential',
           status: data.status || data.availability || fromDetails('status') || 'Ready to move',
           developer: data.developerName || data.developer || data.builder || fromDetails('developer') || '',
@@ -202,7 +208,7 @@ export default function EditPropertyPage() {
           setUnits(data.units.map((u: any, i: number) => ({
             id: u.id || String(i),
             unitNo: u.unitNo || '', floor: u.floor || '', type: u.type || '',
-            size: u.size || '', price: u.price || '', status: u.status || 'Available',
+            size: u.size || '', price: u.price || '', priceUnit: u.priceUnit || '', status: u.status || 'Available',
             facing: u.facing || '', remarks: u.remarks || '', overview: u.overview || '',
             meetingRooms: u.meetingRooms || '', cabins: u.cabins || '', maxSeats: u.maxSeats || '',
             imageUrls: Array.isArray(u.imageUrls) ? u.imageUrls : [],
@@ -260,13 +266,39 @@ export default function EditPropertyPage() {
         { label: 'Status', value: formData.status },
       ].filter((d) => d.value && d.value.trim() !== '');
 
+      // Format price from expectedPrice (source of truth)
+      const rawExpectedPrice = formData.expectedPrice.replace(/[₹,\s]/g, '');
+      const rawPrice = formData.price.replace(/[₹,\s]/g, '');
+      // Use expectedPrice if available, else fall back to price field
+      const priceSource = rawExpectedPrice && /^\d+(\.\d+)?$/.test(rawExpectedPrice)
+        ? Number(rawExpectedPrice)
+        : rawPrice && /^\d+(\.\d+)?$/.test(rawPrice)
+        ? Number(rawPrice)
+        : null;
+
+      const isRentLease = formData.priceUnit === 'Monthly' || formData.priceUnit === 'Yearly';
+      const formattedPrice = priceSource
+        ? (() => {
+            const suffix = formData.priceUnit === 'Monthly' ? '/Month'
+              : formData.priceUnit === 'Yearly' ? '/Year' : '';
+            const formatted = priceSource >= 10000000
+              ? `₹${(priceSource / 10000000).toFixed(2).replace(/\.?0+$/, '')} Cr`
+              : priceSource >= 100000
+              ? `₹${(priceSource / 100000).toFixed(2).replace(/\.?0+$/, '')} Lac`
+              : `₹${priceSource.toLocaleString('en-IN')}`;
+            return suffix ? `${formatted}${suffix}` : `${formatted} onwards`;
+          })()
+        : formData.price;
+
       const updateData: Record<string, any> = {
         // Both name AND projectName update karo (post-property dono use karta hai)
         name: formData.name,
         projectName: formData.name,
         location: formData.location,
         projectLocation: formData.location,
-        price: formData.price,
+        price: formattedPrice,
+        expectedPrice: priceSource ? String(priceSource) : formData.expectedPrice,
+        priceUnit: formData.priceUnit,
         category: formData.category,
         propertyCategory: formData.category,
         status: formData.status,
@@ -288,6 +320,7 @@ export default function EditPropertyPage() {
         connectivityHighlights: locationHighlightsArr,
         locationOverview: formData.locationOverview.trim(),
         details: detailsArr,
+        updatedAt: serverTimestamp(),
         // ── Units ──────────────────────────────────────────────────────────
         units: await Promise.all(units.map(async ({ id, imageFiles, videoFiles, ...rest }) => {
           const newImgUrls: string[] = [];
@@ -319,7 +352,7 @@ export default function EditPropertyPage() {
           return {
             ...rest,
             price: rest.price && /^\d+$/.test(rest.price.replace(/,/g, ''))
-              ? `₹${Number(rest.price.replace(/,/g, '')).toLocaleString('en-IN')} onwards`
+              ? `₹${Number(rest.price.replace(/,/g, '')).toLocaleString('en-IN')}${rest.priceUnit ? '/' + rest.priceUnit : ' onwards'}`
               : rest.price,
             imageUrls: [...rest.imageUrls, ...newImgUrls],
             videoUrls: [...rest.videoUrls, ...newVidUrls],
@@ -340,6 +373,7 @@ export default function EditPropertyPage() {
       console.log('Saved successfully!');
 
       setSaveSuccess(true);
+      router.refresh();
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err: any) {
       console.error('Error saving property:', err);
@@ -516,14 +550,40 @@ export default function EditPropertyPage() {
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Price <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.price}
-                    onChange={(e) => updateField('price', e.target.value)}
-                    placeholder="e.g. ₹1.2 Cr onwards or Price on Request"
-                    className="w-full px-4 py-3.5 rounded-2xl text-sm text-slate-800 outline-none border border-slate-200 focus:border-slate-500 transition-colors bg-white"
-                  />
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">₹</span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={formData.expectedPrice}
+                        onChange={(e) => updateField('expectedPrice', e.target.value)}
+                        placeholder="e.g. 150000"
+                        className="w-full pl-7 pr-3 py-3.5 rounded-2xl text-sm text-slate-800 outline-none border border-slate-200 focus:border-slate-500 transition-colors bg-white"
+                      />
+                    </div>
+                    <select
+                      value={formData.priceUnit}
+                      onChange={(e) => updateField('priceUnit', e.target.value)}
+                      className="px-3 py-3.5 rounded-2xl border border-slate-200 text-sm text-slate-700 bg-white outline-none focus:border-slate-500 transition-colors"
+                    >
+                      <option value="">Total Price</option>
+                      <option value="Monthly">Monthly</option>
+                      <option value="Yearly">Yearly</option>
+                      <option value="Per sq.ft.">Per sq.ft.</option>
+                      <option value="Per sq.m.">Per sq.m.</option>
+                    </select>
+                  </div>
+                  {formData.expectedPrice && Number(formData.expectedPrice) > 0 && (
+                    <p className="text-xs mt-1.5" style={{ color: '#1a2744' }}>
+                      {Number(formData.expectedPrice) >= 10000000
+                        ? `₹${(Number(formData.expectedPrice) / 10000000).toFixed(2).replace(/\.?0+$/, '')} Cr`
+                        : Number(formData.expectedPrice) >= 100000
+                        ? `₹${(Number(formData.expectedPrice) / 100000).toFixed(2).replace(/\.?0+$/, '')} Lac`
+                        : `₹${Number(formData.expectedPrice).toLocaleString('en-IN')}`}
+                      {formData.priceUnit === 'Monthly' ? '/Month' : formData.priceUnit === 'Yearly' ? '/Year' : formData.priceUnit ? ` ${formData.priceUnit}` : ' onwards'}
+                    </p>
+                  )}
                 </div>
                 {/* Category */}
                 <div>
@@ -774,7 +834,6 @@ export default function EditPropertyPage() {
                           { key: 'floor',        label: 'Floor',            ph: 'e.g. 4th Floor' },
                           { key: 'type',         label: 'Type',             ph: 'e.g. Office Space' },
                           { key: 'size',         label: 'Size',             ph: 'e.g. 800 sq.ft.' },
-                          { key: 'price',        label: 'Price',            ph: 'e.g. ₹50,000' },
                           { key: 'facing',       label: 'Facing',           ph: 'e.g. East' },
                           { key: 'meetingRooms', label: 'Meeting Rooms',    ph: 'e.g. 2' },
                           { key: 'cabins',       label: 'Cabins',           ph: 'e.g. 3' },
@@ -789,6 +848,38 @@ export default function EditPropertyPage() {
                               style={{ borderColor: (unit[key] as string) ? PRIMARY : '#e2e8f0' }} />
                           </div>
                         ))}
+
+                        {/* Price + Monthly/Yearly toggle */}
+                        <div className="col-span-2 sm:col-span-1">
+                          <label className="block text-xs font-semibold text-slate-500 mb-1">Price</label>
+                          <div className="flex gap-1.5">
+                            <input
+                              type="text"
+                              value={unit.price}
+                              onChange={e => updateUnit(unit.id, 'price', e.target.value)}
+                              placeholder="e.g. ₹50,000"
+                              className="flex-1 min-w-0 px-3 py-2 rounded-xl border text-sm text-slate-800 outline-none bg-white transition-colors"
+                              style={{ borderColor: unit.price ? PRIMARY : '#e2e8f0' }}
+                            />
+                            <div className="flex rounded-xl border overflow-hidden flex-shrink-0" style={{ borderColor: '#e2e8f0' }}>
+                              {(['Monthly', 'Yearly'] as const).map((opt) => (
+                                <button
+                                  key={opt}
+                                  type="button"
+                                  onClick={() => updateUnit(unit.id, 'priceUnit', unit.priceUnit === opt ? '' : opt)}
+                                  className="px-2 py-1 text-[10px] font-semibold transition-colors"
+                                  style={{
+                                    backgroundColor: unit.priceUnit === opt ? PRIMARY : 'white',
+                                    color: unit.priceUnit === opt ? 'white' : '#94a3b8',
+                                    borderRight: opt === 'Monthly' ? '1px solid #e2e8f0' : 'none',
+                                  }}
+                                >
+                                  {opt === 'Monthly' ? 'Mo' : 'Yr'}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
 
                         {/* Status */}
                         <div>
