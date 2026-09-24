@@ -24,6 +24,11 @@ export const metadata: Metadata = {
     "RERA Approved Projects Noida",
     "Nexique Estate",
   ],
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
+  },
   verification: {
     google: "ZYl48fTZd4_6lNW5iMjUWA9EJZmbw_aV4mkul38eYkU",
   },
