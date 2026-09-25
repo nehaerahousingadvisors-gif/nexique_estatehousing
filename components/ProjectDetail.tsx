@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // ── Status badge ─────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
@@ -113,6 +113,49 @@ function UnitInventorySection({ units, totalUnits, availableUnits }: {
   const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
   const [videoModal, setVideoModal] = useState<string | null>(null);
   const [videoOpen, setVideoOpen] = useState<Record<number, boolean>>({});
+  const [visibleCards, setVisibleCards] = useState<boolean[]>([]);
+  const [headerVisible, setHeaderVisible] = useState(false);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Intersection Observer for header
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setHeaderVisible(true); },
+      { threshold: 0.2 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // Intersection Observer for each unit card (staggered)
+  useEffect(() => {
+    setVisibleCards(new Array(units.length).fill(false));
+    const observers: IntersectionObserver[] = [];
+    cardRefs.current.forEach((el, i) => {
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => {
+              setVisibleCards(prev => {
+                const next = [...prev];
+                next[i] = true;
+                return next;
+              });
+            }, i * 120);
+          }
+        },
+        { threshold: 0.1 }
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+    return () => observers.forEach(o => o.disconnect());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [units.length]);
 
   return (
     <>
@@ -146,30 +189,71 @@ function UnitInventorySection({ units, totalUnits, availableUnits }: {
         </div>
       )}
 
-      <div className="px-4 sm:px-8 md:px-12 py-6 border-t border-slate-200">
+      <div className="py-6 border-t border-slate-200">
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-lg sm:text-2xl md:text-3xl font-bold text-slate-900">Units / Inventory</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Available units in this project</p>
-          </div>
-          <div className="flex gap-1.5">
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-              Total: {totalUnits ?? units.length}
-            </span>
-            {availableUnits !== undefined && (
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                Available: {availableUnits}
+        {/* Header — dark navy banner with gold title */}
+        <div
+          ref={headerRef}
+          className="relative mx-4 sm:mx-8 md:mx-12 mb-6 rounded-xl overflow-hidden transition-all duration-700 ease-out"
+          style={{
+            opacity: headerVisible ? 1 : 0,
+            transform: headerVisible ? 'translateY(0) scaleX(1)' : 'translateY(-16px) scaleX(0.96)',
+            backgroundColor: '#1a2744',
+          }}
+        >
+          {/* Subtle shimmer line at top */}
+          <div
+            className="absolute top-0 left-0 right-0 h-[2px]"
+            style={{ background: 'linear-gradient(90deg, transparent, #C4A35A, transparent)' }}
+          />
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 py-3 sm:py-4 gap-2 sm:gap-0">
+            {/* Title row */}
+            <div className="flex items-center gap-3">
+              {/* Left accent bar */}
+              <div className="w-1 h-7 rounded-full flex-shrink-0" style={{ backgroundColor: '#C4A35A' }} />
+              <h3
+                className="text-lg sm:text-2xl md:text-3xl font-bold tracking-wide"
+                style={{ color: '#C4A35A' }}
+              >
+                Units/Inventory
+              </h3>
+            </div>
+
+            {/* Badges */}
+            <div className="flex gap-2 flex-wrap pl-4 sm:pl-0">
+              <span className="px-3 py-1 rounded-full text-[11px] font-bold border"
+                style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: '#e2e8f0', borderColor: 'rgba(255,255,255,0.15)' }}>
+                Total: {totalUnits ?? units.length}
               </span>
-            )}
+              {availableUnits !== undefined && (
+                <span className="px-3 py-1 rounded-full text-[11px] font-bold border"
+                  style={{ backgroundColor: 'rgba(196,163,90,0.15)', color: '#C4A35A', borderColor: 'rgba(196,163,90,0.4)' }}>
+                  Available: {availableUnits}
+                </span>
+              )}
+            </div>
           </div>
+
+          {/* Subtle shimmer line at bottom */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-[1px]"
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(196,163,90,0.4), transparent)' }}
+          />
         </div>
 
         {/* Unit cards */}
-        <div className="space-y-6">
+        <div className="space-y-6 px-4 sm:px-8 md:px-12">
           {units.map((unit, i) => (
-            <div key={i} className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div
+              key={i}
+              ref={el => { cardRefs.current[i] = el; }}
+              className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden transition-all duration-700 ease-out"
+              style={{
+                opacity: visibleCards[i] ? 1 : 0,
+                transform: visibleCards[i] ? 'translateX(0)' : 'translateX(-40px)',
+              }}
+            >
               {/* Always horizontal: photo left, details right */}
               <div className="flex flex-row">
 
@@ -291,7 +375,7 @@ function UnitInventorySection({ units, totalUnits, availableUnits }: {
                   {/* Price */}
                   {unit.price && (
                     <div className="mb-2">
-                      <p className="text-[10px] text-slate-400 uppercase tracking-wide">Starting at</p>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wide">Rent</p>
                       <p className="text-sm sm:text-base font-black" style={{ color: '#1a2744' }}>
                         {(() => {
                           const raw = unit.price.replace(/,/g, '');
@@ -325,7 +409,7 @@ function UnitInventorySection({ units, totalUnits, availableUnits }: {
                     ] as { label: string; value?: string }[])
                       .filter(x => x.value)
                       .map(({ label, value }) => (
-                        <span key={label} className="inline-flex items-center gap-1 px-3 py-1 bg-slate-50 border border-slate-200 rounded-full text-xs sm:text-sm text-slate-700">
+                        <span key={label} className="inline-flex items-center gap-1 px-3 py-1 bg-slate-50 border border-slate-200 rounded-full text-xs sm:text-sm text-slate-700 transition-all duration-200 hover:bg-slate-100 hover:border-slate-300 hover:scale-105 cursor-default">
                           <span className="font-semibold text-slate-500">{label}:</span>{value}
                         </span>
                       ))}
@@ -338,6 +422,28 @@ function UnitInventorySection({ units, totalUnits, availableUnits }: {
                       <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">{unit.overview}</p>
                     </div>
                   )}
+
+                  {/* Call Now button */}
+                  <div className="mt-3">
+                    <a
+                      href="tel:+919667394175"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white transition-all duration-200 active:scale-95 hover:brightness-110 shadow-md hover:shadow-lg"
+                      style={{ background: 'linear-gradient(135deg, #1a2744 0%, #2d4080 100%)' }}
+                    >
+                      {/* Phone icon */}
+                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-white/20">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                      </span>
+                      Call Now
+                      {/* Gold pulse dot */}
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: '#C4A35A' }} />
+                        <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: '#C4A35A' }} />
+                      </span>
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
